@@ -9,11 +9,11 @@ namespace Corsinvest.AllenBradley.PLC.Api
     /// <summary>
     /// Group of Tags
     /// </summary>
-    public class TagGroup : IDisposable
+    public class TagGroup
     {
         private bool _disposed;
         private readonly Timer _timer;
-        private readonly List<ITag> _tags = new List<ITag>();
+        private readonly Dictionary<string, ITag> _tags = new Dictionary<string, ITag>();
         private object _lockScan = new object();
 
         /// <summary>
@@ -28,184 +28,57 @@ namespace Corsinvest.AllenBradley.PLC.Api
 
         private TagGroup() { }
 
-        internal TagGroup(Controller controller)
+        internal TagGroup(Controller controller, string name)
         {
             Controller = controller;
+            Name = name;
             _timer = new Timer();
             _timer.Elapsed += OnTimedEvent;
         }
+
+        /// <summary>
+        /// Friendly name for this group
+        /// </summary>
+        public string Name { get; }
 
         #region Collection
         /// <summary>
         /// Tags
         /// </summary>
         /// <returns></returns>
-        public IReadOnlyList<ITag> Tags { get { return _tags.AsReadOnly(); } }
+        public IEnumerable<ITag> Tags { get { return _tags.Values.AsEnumerable(); } }
 
         /// <summary>
         /// Add tag
         /// </summary>
         /// <param name="tag"></param>
-        public void AddTag(ITag tag)
+        public void Add(ITag tag)
         {
-            if (Tags.Contains(tag)) { throw new ArgumentException("Tag already exists in this collection!"); }
-            if (!Controller.Tags.Contains(tag)) { throw new ArgumentException("Tag not in this controller"); }
+            if (_tags.ContainsKey(tag.Name)) 
+            {
+                throw new ArgumentException("Tag already exists in this group!"); 
+            }
 
-            _tags.Add(tag);
+            _tags.Add(tag.Name, tag);
         }
 
         /// <summary>
         /// Remove tag
         /// </summary>
         /// <param name="tag"></param>
-        public void RemoveTag(ITag tag)
+        public void Remove(ITag tag)
         {
-            if (!Tags.Contains(tag)) { throw new ArgumentException("Tag not exists in this collection!"); }
-            _tags.Remove(tag);
-            CheckDisposeTag(tag);
+            if (!_tags.ContainsKey(tag.Name)) 
+            { 
+                throw new ArgumentException("Tag not found in this collection!"); 
+            }
+            _tags.Remove(tag.Name);
         }
 
         /// <summary>
         /// Clears all Tags from the group
         /// </summary>
-        public void ClearTags() { _tags.Clear(); }
-        #endregion
-
-        #region Create Tags
-        /// <summary>
-        /// Create Tag Int64
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<Int64> CreateTagInt64(string name) { return CreateTagType<Int64>(name); }
-
-        /// <summary>
-        /// Create Tag UInt64
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<UInt64> CreateTagUInt64(string name) { return CreateTagType<UInt64>(name); }
-
-        /// <summary>
-        /// Create Tag Int32
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<int> CreateTagInt32(string name) { return CreateTagType<int>(name); }
-
-        /// <summary>
-        /// Create Tag UInt32
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<uint> CreateTagUInt32(string name) { return CreateTagType<uint>(name); }
-
-        /// <summary>
-        /// Create Tag Int16
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<short> CreateTagInt16(string name) { return CreateTagType<short>(name); }
-
-        /// <summary>
-        /// Create Tag UInt16
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<ushort> CreateTagUInt16(string name) { return CreateTagType<ushort>(name); }
-
-        /// <summary>
-        /// Create Tag Int8
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<sbyte> CreateTagInt8(string name) { return CreateTagType<sbyte>(name); }
-
-        /// <summary>
-        /// Create Tag UInt8
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<byte> CreateTagUInt8(string name) { return CreateTagType<byte>(name); }
-
-        /// <summary>
-        /// Create Tag String
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<string> CreateTagString(string name) { return CreateTagType<string>(name); }
-
-        /// <summary>
-        /// Create Tag Float32
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<float> CreateTagFloat32(string name) { return CreateTagType<float>(name); }
-
-        /// <summary>
-        /// Create Tag Float64
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <returns></returns>
-        public Tag<double> CreateTagFloat64(string name) { return CreateTagType<double>(name); }
-
-        /// <summary>
-        /// Create Tag custom Type Class
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <typeparam name="TCustomType">Class to create</typeparam>
-        /// <returns></returns>
-        public Tag<TCustomType> CreateTagType<TCustomType>(string name)
-        {
-            return CreateTagType<TCustomType>(name, TagSize.GetSizeObject(TagHelper.CreateObject<TCustomType>(1)));
-        }
-
-        /// <summary>
-        /// Create Tag using free definition
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <param name="size">The size of an element in bytes. The tag is assumed to be composed of elements of the same size.
-        /// For structure tags, use the total size of the structure.</param>
-        /// <param name="length">elements count: 1- single, n-array.</param>
-        /// <returns></returns>
-        public Tag<TCustomType> CreateTagType<TCustomType>(string name, int size, int length = 1)
-        {
-            var tag = new Tag<TCustomType>(Controller, name, size, length);
-            _tags.Add(tag);
-            return tag;
-        }
-
-        /// <summary>
-        /// Create Tag array.
-        /// </summary>
-        /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
-        /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <param name="length">elements count: 1- single, n-array.</param>
-        /// <typeparam name="TCustomType">Type to create</typeparam>
-        /// <returns></returns>
-        public Tag<TCustomType> CreateTagArray<TCustomType>(string name, int length)
-            where TCustomType : IList
-        {
-            var type = typeof(TCustomType);
-            if (!type.IsArray) { throw new ArgumentException("Is not array!"); }
-            if (length <= 0) { throw new ArgumentException("Length > 0!"); }
-
-            var obj = TagHelper.CreateObject<TCustomType>(length);
-            return CreateTagType<TCustomType>(name, TagSize.GetSizeObject(obj[0]), length);
-        }
+        public void Clear() { _tags.Clear(); }
         #endregion
 
         /// <summary>
@@ -223,10 +96,10 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <summary>
         /// Performs read of Group of Tags
         /// </summary>
-        public IEnumerable<ResultOperation> Read(bool onlyChanged = false)
+        public IEnumerable<OperationResult> Read(bool onlyChanged = false)
         {
             var results = Tags.Select(a => a.Read()).ToArray();
-            var resultsOnlyChanged = results.Where(a => a.Tag.IsChangedValue);
+            var resultsOnlyChanged = results.Where(a => a.Tag.HasChangedValue);
             if (resultsOnlyChanged.Count() > 0) { Changed?.Invoke(resultsOnlyChanged); }
 
             return onlyChanged ? resultsOnlyChanged : results;
@@ -235,7 +108,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <summary>
         /// Performs write of Group of Tags
         /// </summary>
-        public IEnumerable<ResultOperation> Write() { return this.Tags.Select(a => a.Write()).ToArray(); }
+        public IEnumerable<OperationResult> Write() { return Tags.Select(a => a.Write()).ToArray(); }
 
         /// <summary>
         /// Scan operation behavior of Tags
@@ -258,7 +131,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         public void ScanStart()
         {
-            if (Enabled) { throw new Exception("Enabled group disabled!"); }
+            if (Enabled) { throw new Exception("TagGroup cannot scan when disabled"); }
             _timer.Start();
         }
 
@@ -283,41 +156,5 @@ namespace Corsinvest.AllenBradley.PLC.Api
                 OnTimedScan?.Invoke(this, EventArgs.Empty);
             }
         }
-
-        #region IDisposable Support
-        private void CheckDisposeTag(ITag tag)
-        {
-            //if not in connroller dispose
-            if (!Controller.Tags.Contains(tag)) { tag.Dispose(); }
-        }
-
-        void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    foreach (var tag in _tags.ToArray())
-                    {
-                        _tags.Remove(tag);
-                        CheckDisposeTag(tag);
-                    }
-                }
-
-                _disposed = true;
-            }
-        }
-
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        /// <returns></returns>
-        ~TagGroup() { Dispose(false); }
-
-        /// <summary>
-        /// Dispose object
-        /// </summary>
-        public void Dispose() { Dispose(true); }
-        #endregion
     }
 }

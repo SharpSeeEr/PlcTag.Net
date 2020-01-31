@@ -70,18 +70,40 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <value></value>
         public static IReadOnlyDictionary<Type, int> NativeTypes { get; } = new Dictionary<Type, int>
         {
-            { typeof(Int64), INT64 },
-            { typeof(UInt64), UINT64 },
-            { typeof(Int32), INT32 },
-            { typeof(UInt32), UINT32 },
-            { typeof(Int16), INT16 },
-            { typeof(UInt16), UINT16 },
-            { typeof(sbyte), INT8 },
-            { typeof(byte), UINT8 },
-            { typeof(float), FLOAT32 },
-            { typeof(double), FLOAT64 },
-            { typeof(string), STRING },
+            { typeof(Int64),    INT64 },
+            { typeof(UInt64),   UINT64 },
+            { typeof(Int32),    INT32 },
+            { typeof(UInt32),   UINT32 },
+            { typeof(Int16),    INT16 },
+            { typeof(UInt16),   UINT16 },
+            { typeof(sbyte),    INT8 },
+            { typeof(byte),     UINT8 },
+            { typeof(float),    FLOAT32 },
+            { typeof(double),   FLOAT64 },
+            { typeof(string),   STRING },
         };
+
+        /// <summary>
+        /// Gets the size in bytes for type <typeparamref name="T"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static int GetSize<T>()
+        {
+            var type = typeof(T);
+
+            if (type.IsArray)
+            {
+                type = type.GetElementType();
+            }
+
+            if (NativeTypes.TryGetValue(type, out int size))
+            {
+                return size;
+            }
+
+            throw new ArgumentException("Invalid type specified");
+        }
 
         /// <summary>
         /// Get size from object.
@@ -103,7 +125,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
                 {
                     if (type.IsClass && !type.IsAbstract)
                     {
-                        size += TagHelper.GetAccessableProperties(type)
+                        size += TagHelper.GetAccessibleProperties(type)
                                          .Select(a => GetSizeObject(a.GetValue(obj)))
                                          .Sum();
                     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -8,18 +9,54 @@ namespace Corsinvest.AllenBradley.PLC.Api
     /// <summary>
     /// Tag local manipulaton value
     /// </summary>
-    public class TagValueManager
+    public class TagValueManager<T>
     {
-        private readonly ITag _tag;
+        private readonly ITag<T> _tag;
+
+        private readonly IReadOnlyDictionary<Type, Func<int, object>> _getFuncMap;
+        private readonly IReadOnlyDictionary<Type, Action<object, int>> _setFuncMap;
 
         /// <summary>
         /// Byte Length string in header
         /// </summary>
         private const byte BYTE_HEADER_LENGTH_STRING = 4;
 
-        const byte MAX_LENGTH_STRING = 82;
+        private const byte MAX_LENGTH_STRING = 82;
 
-        internal TagValueManager(ITag tag) { _tag = tag; }
+        internal TagValueManager(ITag<T> tag)
+        {
+            _tag = tag;
+            _getFuncMap = new Dictionary<Type, Func<int, object>>()
+            {
+                { typeof(Int64), GetInt64 },
+                { typeof(UInt64), GetUInt64 },
+                { typeof(Int32), GetInt32 },
+                { typeof(UInt32), GetUInt32 },
+                { typeof(Int16), GetInt16 },
+                { typeof(UInt16), GetUInt16 },
+                { typeof(sbyte), GetInt8 },
+                { typeof(byte), GetUInt8 },
+                { typeof(float), GetFloat32 },
+                { typeof(double), GetFloat64 },
+                { typeof(string), GetString },
+                { typeof(bool), GetBool },
+            };
+            _setFuncMap = new Dictionary<Type, Action<object, int>>()
+            {
+                { typeof(Int64), SetInt64 },
+                { typeof(UInt64), SetUInt64 },
+                { typeof(Int32), SetInt32 },
+                { typeof(UInt32), SetUInt32 },
+                { typeof(Int16), SetInt16 },
+                { typeof(UInt16), SetUInt16 },
+                { typeof(sbyte), SetInt8 },
+                { typeof(byte), SetUInt8 },
+                { typeof(float), SetFloat32 },
+                { typeof(double), SetFloat64 },
+                { typeof(string), SetString },
+                { typeof(bool), SetBool },
+            };
+        }
 
         /// <summary>
         /// Get local value
@@ -27,35 +64,15 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="obj"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        internal object Get(object obj, int offset = 0)
+        internal T Get(int offset = 0)
         {
-            var type = obj.GetType();
-            if (type.IsArray)
+            try
             {
-                var array = TagHelper.GetArray(obj);
-                for (int i = 0; i < array.Length; i++)
-                {
-                    var el = array.GetValue(i);
-                    array.SetValue(Get(el, offset), i);
-                    offset += TagSize.GetSizeObject(el);
-                }
-                return array;
+                return (T)_getFuncMap[_tag.ValueType](offset);
             }
-            else
+            catch (Exception)
             {
-                if (type == typeof(Int64)) { return GetInt64(offset); }
-                else if (type == typeof(UInt64)) { return GetUInt64(offset); }
-                else if (type == typeof(Int32)) { return GetInt32(offset); }
-                else if (type == typeof(UInt32)) { return GetUInt32(offset); }
-                else if (type == typeof(Int16)) { return GetInt16(offset); }
-                else if (type == typeof(UInt16)) { return GetUInt16(offset); }
-                else if (type == typeof(sbyte)) { return GetInt8(offset); }
-                else if (type == typeof(byte)) { return GetUInt8(offset); }
-                else if (type == typeof(float)) { return GetFloat32(offset); }
-                else if (type == typeof(double)) { return GetFloat64(offset); }
-                else if (type == typeof(string)) { return GetString(offset); }
-                else if (type.IsClass && !type.IsAbstract) { return GetType(obj, offset); }
-                else { throw new ArgumentException("Error data type!"); }
+                throw new InvalidOperationException("GetValue: Unknown Tag data size");
             }
         }
 
@@ -64,32 +81,15 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        internal void Set(object value, int offset = 0)
+        internal void Set(T value, int offset = 0)
         {
-            var type = value.GetType();
-            if (type.IsArray)
+            try
             {
-                foreach (var el in TagHelper.GetArray(value))
-                {
-                    Set(el, offset);
-                    offset += TagSize.GetSizeObject(el);
-                }
+                _setFuncMap[_tag.ValueType](value, offset);
             }
-            else
+            catch (Exception)
             {
-                if (type == typeof(Int64)) { SetInt64((Int64)value, offset); }
-                else if (type == typeof(UInt64)) { SetUInt64((UInt64)value, offset); }
-                else if (type == typeof(Int32)) { SetInt32((int)value, offset); }
-                else if (type == typeof(UInt32)) { SetUInt32((uint)value, offset); }
-                else if (type == typeof(Int16)) { SetInt16((short)value, offset); }
-                else if (type == typeof(UInt16)) { SetUInt16((ushort)value, offset); }
-                else if (type == typeof(sbyte)) { SetInt8((sbyte)value, offset); }
-                else if (type == typeof(byte)) { SetUInt8((byte)value, offset); }
-                else if (type == typeof(float)) { SetFloat32((float)value, offset); }
-                else if (type == typeof(double)) { SetFloat64((float)value, offset); }
-                else if (type == typeof(string)) { SetString((string)value, offset); }
-                else if (type.IsClass && !type.IsAbstract) { SetType(value, offset); }
-                else { throw new ArgumentException("Error data type!"); }
+                throw new InvalidOperationException("SetValue: Unknown Tag data size");
             }
         }
 
@@ -98,156 +98,220 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public UInt16 GetUInt16(int offset = 0) { return NativeLibrary.plc_tag_get_uint16(_tag.Handle, offset); }
+        private object GetUInt16(int offset)
+        {
+             return NativeLibrary.plc_tag_get_uint16(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value UInt16
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetUInt16(UInt16 value, int offset = 0) { NativeLibrary.plc_tag_set_uint16(_tag.Handle, offset, value); }
+        private void SetUInt16(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_uint16(_tag.Handle, offset, (UInt16)value);
+        }
 
         /// <summary>
         /// Get local value Int16
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public Int16 GetInt16(int offset = 0) { return NativeLibrary.plc_tag_get_int16(_tag.Handle, offset); }
+        private object GetInt16(int offset)
+        {
+             return NativeLibrary.plc_tag_get_int16(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value Int16
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetInt16(Int16 value, int offset = 0) { NativeLibrary.plc_tag_set_int16(_tag.Handle, offset, value); }
+        private void SetInt16(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_int16(_tag.Handle, offset, (Int16)value);
+        }
 
         /// <summary>
         /// Get local value UInt8
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public byte GetUInt8(int offset = 0) { return NativeLibrary.plc_tag_get_uint8(_tag.Handle, offset); }
+        private object GetUInt8(int offset)
+        { 
+            return NativeLibrary.plc_tag_get_uint8(_tag.Handle, offset); 
+        }
 
         /// <summary>
         /// Set local value UInt8
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetUInt8(byte value, int offset = 0) { NativeLibrary.plc_tag_set_uint8(_tag.Handle, offset, value); }
+        private void SetUInt8(object value, int offset)
+        {
+            NativeLibrary.plc_tag_set_uint8(_tag.Handle, offset, (byte)value);
+        }
 
         /// <summary>
         /// Get local value Int8
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public sbyte GetInt8(int offset = 0) { return NativeLibrary.plc_tag_get_int8(_tag.Handle, offset); }
+        private object GetInt8(int offset)
+        {
+             return NativeLibrary.plc_tag_get_int8(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value Int8
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetInt8(sbyte value, int offset = 0) { NativeLibrary.plc_tag_set_int8(_tag.Handle, offset, value); }
+        private void SetInt8(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_int8(_tag.Handle, offset, (sbyte)value);
+        }
 
         /// <summary>
         /// Get local value UInt32
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public UInt32 GetUInt32(int offset = 0) { return NativeLibrary.plc_tag_get_uint32(_tag.Handle, offset); }
+        private object GetUInt32(int offset)
+        {
+             return NativeLibrary.plc_tag_get_uint32(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value UInt32
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetUInt32(UInt32 value, int offset = 0) { NativeLibrary.plc_tag_set_uint32(_tag.Handle, offset, value); }
+        private void SetUInt32(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_uint32(_tag.Handle, offset, (UInt32)value);
+        }
 
         /// <summary>
         /// Get local value Int32
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public Int32 GetInt32(int offset = 0) { return NativeLibrary.plc_tag_get_int32(_tag.Handle, offset); }
- 
+        private object GetInt32(int offset)
+        {
+             return NativeLibrary.plc_tag_get_int32(_tag.Handle, offset);
+        }
+
         /// <summary>
         /// Set local value Int32
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetInt32(Int32 value, int offset = 0) { NativeLibrary.plc_tag_set_int32(_tag.Handle, offset, value); }
+        private void SetInt32(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_int32(_tag.Handle, offset, (Int32)value);
+        }
 
         /// <summary>
         /// Get local value UInt64
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public UInt64 GetUInt64(int offset = 0) { return NativeLibrary.plc_tag_get_uint64(_tag.Handle, offset); }
+        private object GetUInt64(int offset)
+        {
+             return NativeLibrary.plc_tag_get_uint64(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value UInt64
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetUInt64(UInt64 value, int offset = 0) { NativeLibrary.plc_tag_set_uint64(_tag.Handle, offset, value); }
-
+        private void SetUInt64(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_uint64(_tag.Handle, offset, (UInt64)value);
+        }
 
         /// <summary>
         /// Get local value Int64
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public Int64 GetInt64(int offset = 0) { return NativeLibrary.plc_tag_get_int64(_tag.Handle, offset); }
+        public object GetInt64(int offset)
+        {
+             return NativeLibrary.plc_tag_get_int64(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value Int64
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetInt64(Int64 value, int offset = 0) { NativeLibrary.plc_tag_set_int64(_tag.Handle, offset, value); }
+        private void SetInt64(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_int64(_tag.Handle, offset, (Int64)value);
+        }
 
         /// <summary>
         /// Get local value Float32
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public float GetFloat32(int offset = 0) { return NativeLibrary.plc_tag_get_float32(_tag.Handle, offset); }
+        private object GetFloat32(int offset)
+        {
+             return NativeLibrary.plc_tag_get_float32(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value Float32
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetFloat32(float value, int offset = 0) { NativeLibrary.plc_tag_set_float32(_tag.Handle, offset, value); }
+        private void SetFloat32(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_float32(_tag.Handle, offset, (float)value);
+        }
 
         /// <summary>
         /// Get local value Float
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public double GetFloat64(int offset = 0) { return NativeLibrary.plc_tag_get_float64(_tag.Handle, offset); }
+        private object GetFloat64(int offset)
+        {
+             return NativeLibrary.plc_tag_get_float64(_tag.Handle, offset);
+        }
 
         /// <summary>
         /// Set local value Float
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetFloat64(double value, int offset = 0) { NativeLibrary.plc_tag_set_float64(_tag.Handle, offset, value); }
+        private void SetFloat64(object value, int offset)
+        {
+             NativeLibrary.plc_tag_set_float64(_tag.Handle, offset, (double)value);
+        }
 
         /// <summary>
         /// Get local value String
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public string GetString(int offset = 0)
+        private object GetString(int offset)
         {
             var sb = new StringBuilder();
 
             //max length string
-            var length = GetInt32(offset);
+            var length = NativeLibrary.plc_tag_get_int32(_tag.Handle, offset);
 
             //read only length of string
-            for (var i = 0; i < length; i++) { sb.Append((char)GetUInt8(offset + BYTE_HEADER_LENGTH_STRING + i)); }
+            for (var i = 0; i < length; i++)
+            {
+                var charOffset = offset + BYTE_HEADER_LENGTH_STRING + i;
+                var character = (char)NativeLibrary.plc_tag_get_uint8(_tag.Handle, charOffset);
+                sb.Append(character);
+            }
             return sb.ToString();
         }
 
@@ -256,133 +320,49 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
-        public void SetString(string value, int offset = 0)
+        private void SetString(object value, int offset)
         {
-            if (value.Length > MAX_LENGTH_STRING) { throw new ArgumentOutOfRangeException($"Length strign <= {MAX_LENGTH_STRING}!"); }
+            var strValue = value as string;
+            if (strValue.Length > MAX_LENGTH_STRING) { throw new ArgumentOutOfRangeException($"Length strign <= {MAX_LENGTH_STRING}!"); }
 
             //set length
-            SetInt32(value.Length, offset);
+            NativeLibrary.plc_tag_set_int32(_tag.Handle, strValue.Length, offset);
 
             var strIdx = 0;
 
             //copy data
-            for (strIdx = 0; strIdx < value.Length; strIdx++)
+            for (strIdx = 0; strIdx < strValue.Length; strIdx++)
             {
-                SetUInt8((byte)value[strIdx], offset + BYTE_HEADER_LENGTH_STRING + strIdx);
+                var charOffset = offset + BYTE_HEADER_LENGTH_STRING + strIdx;
+                NativeLibrary.plc_tag_set_uint8(_tag.Handle, charOffset, (byte)strValue[strIdx]);
             }
 
             // pad with zeros
-            for (; strIdx < MAX_LENGTH_STRING; strIdx++) { SetUInt8(0, offset + BYTE_HEADER_LENGTH_STRING + strIdx); }
+            for (; strIdx < MAX_LENGTH_STRING; strIdx++) 
+            {
+                var charOffset = offset + BYTE_HEADER_LENGTH_STRING + strIdx;
+                NativeLibrary.plc_tag_set_uint8(_tag.Handle, charOffset, 0);
+            }
         }
 
         /// <summary>
         /// Get bit from index
         /// </summary>
-        /// <param name="index"></param>
+        /// <param name="offset"></param>
         /// <returns></returns>
-        public bool GetBit(int index) { return (Convert.ToInt64(GetNumericValue()) & (1 << index)) != 0; }
+        private object GetBool(int offset) {
+            return NativeLibrary.plc_tag_get_uint8(_tag.Handle, offset) > 0;
+        }
 
         /// <summary>
         /// Set bit from index and value
         /// </summary>
-        /// <param name="index"></param>
         /// <param name="value"></param>
-        public void SetBit(int index, bool value)
-        {
-            if (_tag.Size * 8 <= index) { throw new ArgumentOutOfRangeException("Index out of bound!"); }
-
-            var bits = GetBits();
-            bits.Set(index, value);
-            var data = new int[1];
-            bits.CopyTo(data, 0);
-
-            Set(data[0]);
-        }
-
-        /// <summary>
-        /// Get bit array from value
-        /// </summary>
-        /// <returns></returns>
-        public BitArray GetBits() { return new BitArray(new[] { Convert.ToInt32(GetNumericValue()) }); }
-
-        /// <summary>
-        /// Get bit array from value
-        /// </summary>
-        /// <returns></returns>
-        public bool[] GetBitsArray() { return GetBits().Cast<bool>().ToArray(); }
-
-        /// <summary>
-        /// Get bit string format
-        /// </summary>
-        /// <returns></returns>
-        public string GetBitsString()
-        {
-            return new string(GetBits().Cast<bool>().Select(a => a ? '1' : '0').ToArray());
-        }
-
-        /// <summary>
-        /// Set bits from BitArray
-        /// </summary>
-        /// <param name="bits"></param>
-        public void SetBits(BitArray bits)
-        {
-            if (bits == null) { throw new ArgumentNullException("binary"); }
-            for (int i = 0; i < _tag.Size * 8; i++) { SetBit(i, bits[i]); }
-        }
-
-        /// <summary>
-        /// Set local valute from type
-        /// </summary>
-        /// <param name="obj"></param>
         /// <param name="offset"></param>
-        public void SetType(object obj, int offset = 0)
+        private void SetBool(object value, int offset)
         {
-            foreach (var property in TagHelper.GetAccessableProperties(obj.GetType()))
-            {
-                var value = property.GetValue(obj);
-                Set(value, offset);
-                offset += TagSize.GetSizeObject(value);
-            }
-        }
-
-        /// <summary>
-        /// Get local value form type
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public object GetType(object obj, int offset = 0)
-        {
-            foreach (var property in TagHelper.GetAccessableProperties(obj.GetType()))
-            {
-                var value = property.GetValue(obj);
-                property.SetValue(obj, Get(value, offset));
-                offset += TagSize.GetSizeObject(value);
-            }
-
-            return obj;
-        }
-
-        private object GetNumericValue(int offset = 0)
-        {
-            if (IsNumericInteger()) { return Get(_tag.Value, offset); }
-            else { throw new ArgumentException("Error data type!"); }
-        }
-
-        private bool IsNumericInteger()
-        {
-            switch (Type.GetTypeCode(_tag.TypeValue))
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64: return true;
-                default: return false;
-            }
+            byte byteValue = (byte)((bool)value ? 1 : 0);
+            NativeLibrary.plc_tag_set_uint8(_tag.Handle, offset, byteValue);
         }
     }
 }

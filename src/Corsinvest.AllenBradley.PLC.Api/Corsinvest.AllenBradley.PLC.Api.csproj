@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Version>0.1.7</Version>
     <Company>Corsinvest Srl</Company>
@@ -18,6 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+  <None Include="C:\Users\Aaron\source\repos\cv4ab-api-dotnet\.gitignore" Link=".gitignore" />
   <None Include="icon.png">
     <Pack>True</Pack>
     <PackagePath></PackagePath>
@@ -29,6 +30,11 @@
 		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x86/native/plctag.dll" Link="plctag.dll" Pack="true" PackagePath="runtimes/win-x86/native/plctag.dll" />
 		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/linux-x64/native/plctag.so" Link="plctag.so" Pack="true" PackagePath="runtimes/linux-x64/native/plctag.so" />
 		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/linux-x86/native/plctag.so" Link="plctag.so" Pack="true" PackagePath="runtimes/linux-x86/native/plctag.so" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.1" />
   </ItemGroup>
 </Project>
 

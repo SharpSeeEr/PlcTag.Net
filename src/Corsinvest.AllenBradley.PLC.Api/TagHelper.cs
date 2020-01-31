@@ -61,7 +61,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
             }
             else if (type.IsClass && !type.IsAbstract)
             {
-                foreach (var property in GetAccessableProperties(type))
+                foreach (var property in GetAccessibleProperties(type))
                 {
                     if (property.PropertyType == typeof(string))
                     {
@@ -75,7 +75,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
             }
         }
 
-        internal static IEnumerable<PropertyInfo> GetAccessableProperties(Type type)
+        internal static IEnumerable<PropertyInfo> GetAccessibleProperties(Type type)
         {
             return type.GetProperties(BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.Public)
                        .Where(p => p.GetSetMethod() != null);

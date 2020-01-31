@@ -12,6 +12,12 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         /// <value></value>
         new TType Value { get; set; }
+
+        /// <summary>
+        /// Value manager
+        /// </summary>
+        /// <value></value>
+        TagValueManager<TType> ValueManager { get; }
     }
 
     /// <summary>
@@ -20,7 +26,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
     public interface ITag : IDisposable
     {
         /// <summary>
-        /// Handle creation Tag
+        /// Handle, or Id, of the created Tag
         /// </summary>
         /// <value></value>
         Int32 Handle { get; }
@@ -38,7 +44,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         string Name { get; }
 
         /// <summary>
-        /// The size of an element in bytes. The tag is assumed to be composed of elements of the same size.For structure tags, 
+        /// The size of an element in bytes. The tag is assumed to be composed of elements of the same size. For structure tags, 
         /// use the total size of the structure.
         /// </summary>
         int Size { get; }
@@ -52,25 +58,19 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Type value.
         /// </summary>
         /// <value></value>
-        Type TypeValue { get; }
-
-        /// <summary>
-        /// Old value tag.
-        /// </summary>
-        /// <value></value>
-        object OldValue { get; }
+        Type ValueType { get; }
 
         /// <summary>
         /// Value tag.
         /// </summary>
         /// <value></value>
-        object Value { get; set; }
+        object Value { get; }
 
         /// <summary>
         /// Indicate if Value changed OldValue 
         /// </summary>
         /// <value></value>
-        bool IsChangedValue { get; }
+        bool HasChangedValue { get; }
 
         /// <summary>
         /// Indicate if Tag is in read only.async Write raise exception.
@@ -79,33 +79,33 @@ namespace Corsinvest.AllenBradley.PLC.Api
         bool ReadOnly { get; set; }
 
         /// <summary>
-        /// Value manager
+        /// Determines if this tag references an array of values
         /// </summary>
-        /// <value></value>
-        TagValueManager ValueManager { get; }
+        /// <returns></returns>
+        bool IsArray();
 
         /// <summary>
         /// Performs read of Tag 
         /// </summary>
         /// <returns></returns>
-        ResultOperation Read();
+        OperationResult Read();
 
         /// <summary>
         /// Perform write of Tag
         /// </summary>
         /// <returns></returns>
-        ResultOperation Write();
+        OperationResult Write();
 
         /// <summary>
-        /// Indicates whether or not a value must be read from the PLC.
+        /// Indicates whether or not a value has been read from the PLC.
         /// </summary>
         /// <value></value>
-        bool IsRead { get; }
+        bool HasBeenRead { get; }
 
         /// <summary>
-        /// Indicates whether or not a value must be write to the PLC.
+        /// Indicates whether or not a value has been written to the PLC.
         /// </summary>
-        bool IsWrite { get; }
+        bool HasBeenWritten { get; }
 
         /// <summary>
         /// Abort any outstanding IO to the PLC. <see cref="StatusCodeOperation"/>

@@ -7,14 +7,28 @@ namespace Corsinvest.AllenBradley.PLC.Api
     /// <summary>
     /// Result operation
     /// </summary>
-    public class ResultOperation
+    public class OperationResult
     {
-        internal ResultOperation(ITag tag, DateTime timestamp, long executionTime, int statusCode)
+        internal OperationResult(ITag tag, DateTime timestamp, long executionTime, int statusCode)
+            : this(tag, timestamp, executionTime, (OperationStatusCode)statusCode)
+        {
+        }
+
+        internal OperationResult(ITag tag, DateTime timestamp, long executionTime, OperationStatusCode statusCode)
         {
             Tag = tag;
             Timestamp = timestamp;
             ExecutionTime = executionTime;
             StatusCode = statusCode;
+        }
+
+        /// <summary>
+        /// Determines if the result represents an error
+        /// </summary>
+        /// <returns></returns>
+        public bool IsError()
+        {
+            return StatusCode < OperationStatusCode.STATUS_OK;
         }
 
         /// <summary>
@@ -40,19 +54,19 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// STATUS_OK will be returned if the operation completed successfully.
         /// </summary>
         /// <value></value>
-        public int StatusCode { get; }
+        public OperationStatusCode StatusCode { get; }
 
         /// <summary>
         /// Reduce multiple result to one.
         /// </summary>
         /// <param name="results"></param>
         /// <returns></returns>
-        public static ResultOperation Reduce(IEnumerable<ResultOperation> results)
+        public static OperationResult Reduce(IEnumerable<OperationResult> results)
         {
-            return new ResultOperation(null,
+            return new OperationResult(null,
                                        results.Min(a => a.Timestamp),
                                        results.Sum(a => a.ExecutionTime),
-                                       results.Sum(a => a.StatusCode) != 0 ? results.Max(a => a.StatusCode) : 0);
+                                       results.Min(a => a.StatusCode));
         }
 
         /// <summary>

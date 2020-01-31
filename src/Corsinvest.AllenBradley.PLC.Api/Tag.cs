@@ -8,8 +8,8 @@ namespace Corsinvest.AllenBradley.PLC.Api
     /// <summary>
     /// Tag base definition
     /// </summary>
-    /// <typeparam name="TType"></typeparam>
-    public sealed class Tag<TType> : ITag<TType>, IDisposable
+    /// <typeparam name="T"></typeparam>
+    public sealed class Tag<T> : ITag<T>, IDisposable
     {
         private bool _disposed = false;
 
@@ -29,14 +29,14 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="size">The size of an element in bytes. The tag is assumed to be composed of elements of the same size.
         /// For structure tags, use the total size of the structure.</param>
         /// <param name="length">elements count: 1- single, n-array.</param>
-        internal Tag(Controller controller, string name, int size, int length = 1)
+        internal Tag(Controller controller, string name, int length)
         {
             Controller = controller;
             Name = name;
-            Size = size;
+            Size = TagSize.GetSize<T>();
             Length = length;
-            ValueManager = new TagValueManager(this);
-            TypeValue = typeof(TType);
+            ValueManager = new TagValueManager<T>(this);
+            ValueType = typeof(T);
 
             var url = $"protocol=ab_eip&gateway={controller.IPAddress}";
             if (!string.IsNullOrEmpty(controller.Path)) { url += $"&path={controller.Path}"; }
@@ -46,11 +46,11 @@ namespace Corsinvest.AllenBradley.PLC.Api
             //create reference
             Handle = NativeLibrary.plc_tag_create(url, controller.Timeout);
 
-            Value = TagHelper.CreateObject<TType>(Length);
+            Value = TagHelper.CreateObject<T>(Length);
         }
 
         /// <summary>
-        /// Handle creation Tag
+        /// Handle, or Id, of the created Tag
         /// </summary>
         /// <value></value>
         public Int32 Handle { get; }
@@ -81,10 +81,10 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <summary>
         /// Type value.
         /// </summary>
-        public Type TypeValue { get; }
+        public Type ValueType { get; }
 
         /// <summary>
-        /// Indicate if Tag is in read only.async Write raise exception.
+        /// Indicate if Tag is in read only. async Write raise exception.
         /// </summary>
         /// <value></value>
         public bool ReadOnly { get; set; } = false;
@@ -93,25 +93,31 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Value manager
         /// </summary>
         /// <value></value>
-        public TagValueManager ValueManager { get; }
+        public TagValueManager<T> ValueManager { get; }
 
         /// <summary>
         /// Old value tag.
         /// </summary>
         /// <value></value>
-        public object OldValue { get; private set; }
+        private T _previousValueRead;
 
-        private TType _value;
+        /// <summary>
+        /// Old value tag.
+        /// </summary>
+        /// <value></value>
+        private T _previousValueWritten;
+
+        private T _value;
         /// <summary>
         /// Value tag.
         /// </summary>
         /// <value></value>
-        public TType Value
+        public T Value
         {
             get
             {
                 if (Controller.AutoReadValue) { Read(); }
-                return  (TType)ValueManager.Get(_value, 0);
+                return  ValueManager.Get();
             }
 
             set
@@ -125,60 +131,57 @@ namespace Corsinvest.AllenBradley.PLC.Api
         object ITag.Value
         {
             get => Value;
-            set => Value = (TType)value;
         }
 
         /// <summary>
-        /// Indicates whether or not a value must be read from the PLC.
+        /// Indicates whether or not a value has been read from the PLC.
         /// </summary>
         /// <value></value>
-        public bool IsRead { get; private set; } = false;
+        public bool HasBeenRead { get; private set; } = false;
 
         /// <summary>
-        /// Indicates whether or not a value must be write to the PLC.
+        /// Indicates whether or not a value has been written to the PLC.
         /// </summary>
-        public bool IsWrite { get; private set; } = false;
+        public bool HasBeenWritten { get; private set; } = false;
 
         /// <summary>
         /// Indicate if Value changed OldValue 
         /// </summary>
         /// <value></value>
-        public bool IsChangedValue
+        public bool HasChangedValue
         {
             get
             {
-                using (var streamOldValue = new MemoryStream())
-                using (var streamValue = new MemoryStream())
-                {
-                    var formatter = new BinaryFormatter();
-                    formatter.Serialize(streamOldValue, OldValue);
-                    streamOldValue.Seek(0, SeekOrigin.Begin);
-
-                    formatter.Serialize(streamValue, Value);
-                    streamValue.Seek(0, SeekOrigin.Begin);
-
-                    return GetHashCode(streamOldValue.ToArray()) != GetHashCode(streamValue.ToArray());
-                }
+                return _value.Equals(_previousValueRead);
             }
+        }
+
+        /// <summary>
+        /// Determines if this tag references an array of values
+        /// </summary>
+        /// <returns></returns>
+        public bool IsArray()
+        {
+            return Length > 1;
         }
 
         /// <summary>
         /// Performs read of Tag
         /// </summary>
         /// <returns></returns>
-        public ResultOperation Read()
+        public OperationResult Read()
         {
             //save old value
-            OldValue = DeepClone(Value);
+            _previousValueRead = _value;
 
             var timestamp = DateTime.Now;
             var watch = Stopwatch.StartNew();
             var statusCode = NativeLibrary.plc_tag_read(Handle, Controller.Timeout);
 
             watch.Stop();
-            IsRead = true;
+            HasBeenRead = true;
 
-            var result = new ResultOperation(this, timestamp, watch.ElapsedMilliseconds, statusCode);
+            var result = new OperationResult(this, timestamp, watch.ElapsedMilliseconds, statusCode);
 
             //check raise exception
             if (Controller.FailOperationRaiseException && StatusCodeOperation.IsError(statusCode))
@@ -187,7 +190,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
             }
 
             //event change value
-            if (IsChangedValue) { Changed?.Invoke(result); }
+            if (HasChangedValue) { Changed?.Invoke(result); }
 
             return result;
         }
@@ -223,7 +226,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Performs write of Tag 
         /// </summary>
         /// <returns></returns>
-        public ResultOperation Write()
+        public OperationResult Write()
         {
             if (ReadOnly) { throw new InvalidOperationException("Tag is set read only!"); }
 
@@ -231,12 +234,12 @@ namespace Corsinvest.AllenBradley.PLC.Api
             var watch = Stopwatch.StartNew();
             var statusCode = NativeLibrary.plc_tag_write(Handle, Controller.Timeout);
             watch.Stop();
-            IsWrite = true;
+            HasBeenWritten = true;
 
-            var result = new ResultOperation(this, timestamp, watch.ElapsedMilliseconds, statusCode);
+            var result = new OperationResult(this, timestamp, watch.ElapsedMilliseconds, statusCode);
 
             //check raise exception
-            if (Controller.FailOperationRaiseException && StatusCodeOperation.IsError(statusCode))
+            if (Controller.FailOperationRaiseException && result.IsError())
             {
                 throw new TagOperationException(result);
             }

@@ -13,7 +13,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         /// <param name="result"></param>
         /// <returns></returns>
-        public TagOperationException(ResultOperation result) : base("Error execute operation!")
+        public TagOperationException(OperationResult result) : base("Error execute operation!")
         {
             Result = result;
         }
@@ -22,6 +22,6 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Result operation
         /// </summary>
         /// <value></value>
-        public ResultOperation Result { get; }
+        public OperationResult Result { get; }
     }
 }
