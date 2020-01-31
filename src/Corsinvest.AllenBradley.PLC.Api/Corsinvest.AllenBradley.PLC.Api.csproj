@@ -4,14 +4,14 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Version>0.1.7</Version>
     <Company>Corsinvest Srl</Company>
-    <Authors>Daniele Corsini</Authors>
+    <Authors>Daniele Corsini,Aaron Throckmorton</Authors>
     <Copyright>Corsinvest Srl</Copyright>
     <Product>Comunication for Rockwell Allen-Bradley PLC</Product>
-    <AssemblyTitle>Comunication for Rockwell Allen-Bradley PLC in .NET Core</AssemblyTitle>
-    <Description>Comunication for Rockwell Allen-Bradley PLC in .NET Core</Description>
+    <AssemblyTitle>Communication for Rockwell Allen-Bradley PLC in .NET Core</AssemblyTitle>
+    <Description>Communication for Rockwell Allen-Bradley PLC in .NET Core</Description>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Corsinvest/cv4ab-api-dotnet</PackageProjectUrl>
-    <PackageTags>Rockwell;Allen-Bradley;Api,PLC;Corsinvest;LibTagPlc</PackageTags>
+    <PackageTags>Rockwell;Allen-Bradley;Api,PLC;Corsinvest;libplctag</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReleaseNotes>New support 32/64 bit</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
