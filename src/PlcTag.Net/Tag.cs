@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace Corsinvest.AllenBradley.PLC.Api
+namespace PlcTag
 {
     /// <summary>
     /// Tag base definition

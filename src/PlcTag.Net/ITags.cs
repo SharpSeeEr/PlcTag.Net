@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Corsinvest.AllenBradley.PLC.Api
+namespace PlcTag
 {
     /// <summary>
     /// Interface Tag

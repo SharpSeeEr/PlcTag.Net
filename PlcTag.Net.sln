@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D2182C0A-0653-454D-A86F-00132D36E079}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Corsinvest.AllenBradley.PLC.Api", "src\Corsinvest.AllenBradley.PLC.Api\Corsinvest.AllenBradley.PLC.Api.csproj", "{ED925D1A-BF9E-4191-9C95-8953F265611D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlcTag.Net", "src\PlcTag.Net\PlcTag.Net.csproj", "{ED925D1A-BF9E-4191-9C95-8953F265611D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Corsinvest.AllenBradley.PLC.Api.Test", "src\Corsinvest.AllenBradley.PLC.Api.Test\Corsinvest.AllenBradley.PLC.Api.Test.csproj", "{58536987-803E-41E6-A228-08907153A452}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlcTag.Net.Test", "src\PlcTag.Net.Test\PlcTag.Net.Test.csproj", "{58536987-803E-41E6-A228-08907153A452}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,9 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{ED925D1A-BF9E-4191-9C95-8953F265611D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -47,8 +44,14 @@ Global
 		{58536987-803E-41E6-A228-08907153A452}.Release|x86.ActiveCfg = Release|Any CPU
 		{58536987-803E-41E6-A228-08907153A452}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{ED925D1A-BF9E-4191-9C95-8953F265611D} = {D2182C0A-0653-454D-A86F-00132D36E079}
 		{58536987-803E-41E6-A228-08907153A452} = {D2182C0A-0653-454D-A86F-00132D36E079}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2BDC4107-1981-4E9F-8FD4-4E2530D6A650}
 	EndGlobalSection
 EndGlobal

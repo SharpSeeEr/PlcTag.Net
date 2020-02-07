@@ -1,4 +1,4 @@
-﻿namespace Corsinvest.AllenBradley.PLC.Api
+﻿namespace PlcTag
 {
     /// <summary>
     /// Status code operation.

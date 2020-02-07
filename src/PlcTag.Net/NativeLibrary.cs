@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Corsinvest.AllenBradley.PLC.Api
+namespace PlcTag
 {
     public static class NativeLibrary
     {

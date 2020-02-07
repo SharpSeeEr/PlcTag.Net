@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using Corsinvest.AllenBradley.PLC.Api;
-using Microsoft.Extensions.Logging;
 
-namespace Corsinvest.AllenBradley.Test
+namespace PlcTag.Test
 {
     [Serializable]
     public class Test12
@@ -25,11 +24,12 @@ namespace Corsinvest.AllenBradley.Test
             Console.Out.WriteLine($"{@event} {result.Timestamp} Changed: {result.Tag.Name} {result.StatusCode}");
         }
 
-        static void TagChanged(OperationResult result)
+        private static void TagChanged(OperationResult result)
         {
             PrintChange("TagChanged", result);
         }
-        static void GroupChanged(IEnumerable<OperationResult> results)
+
+        private static void GroupChanged(IEnumerable<OperationResult> results)
         {
             foreach (var result in results) PrintChange("GroupTagChanged", result);
         }
@@ -45,8 +45,9 @@ namespace Corsinvest.AllenBradley.Test
                     .AddConsole();
             });
             ILogger<Controller> logger = loggerFactory.CreateLogger<Controller>();
-            
+
             logger.LogInformation("Example log message");
+
             using (var controller = new Controller("10.155.128.192", "1, 0", CPUType.LGX, logger))
             {
                 controller.Timeout = 1000;
@@ -74,9 +75,7 @@ namespace Corsinvest.AllenBradley.Test
                 oven = tagOvenEnabled.Read();
                 Console.Out.WriteLine($"oven value: {oven}");
 
-
-                // var tagBPC1 = grp.CreateTagInt32("TKP_PC_B_P1");
-                // var tagBarcode = grp.CreateTagString("TKP_PLC_S_P1");
+                // var tagBPC1 = grp.CreateTagInt32("TKP_PC_B_P1"); var tagBarcode = grp.CreateTagString("TKP_PLC_S_P1");
 
                 // var tag3 = grp.CreateTagArray<float[]>("OvenTemp", 36);
 
@@ -94,10 +93,8 @@ namespace Corsinvest.AllenBradley.Test
 
                 //var tag2 = controller.CreateTag<float>("Fl32");
 
-
                 //grp.Changed += GroupChanged;
                 //grp.Read();
-
             }
         }
     }

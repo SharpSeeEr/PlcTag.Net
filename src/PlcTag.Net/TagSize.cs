@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Corsinvest.AllenBradley.PLC.Api
+namespace PlcTag
 {
     /// <summary>
     /// Tag size definition

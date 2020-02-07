@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Corsinvest.AllenBradley.PLC.Api
+namespace PlcTag
 {
     /// <summary>
     /// Delegate change event Tag.
