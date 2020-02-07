@@ -93,7 +93,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         }
 
         /// <summary>
-        /// Performs Linear scaling conversion. 
+        /// Performs Linear scaling conversion.
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="minRaw"></param>
@@ -101,14 +101,14 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="minScale"></param>
         /// <param name="maxScale"></param>
         /// <returns></returns>
-        public static double ScaleLinear(this ITag tag, double minRaw, double maxRaw, double minScale, double maxScale)
-        {
-            if (minRaw > maxRaw || minScale > maxScale) { throw new InvalidOperationException(); }
-            return (((maxScale - minScale) / (maxRaw - minRaw)) * (((double)tag.Value) - minRaw)) + minScale;
-        }
+        //public static double ScaleLinear(this ITag tag, double minRaw, double maxRaw, double minScale, double maxScale)
+        //{
+        //    if (minRaw > maxRaw || minScale > maxScale) { throw new InvalidOperationException(); }
+        //    return (((maxScale - minScale) / (maxRaw - minRaw)) * (((double)tag.Value) - minRaw)) + minScale;
+        //}
 
         /// <summary>
-        /// Performs SquareRoot conversion. 
+        /// Performs SquareRoot conversion.
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="minRaw"></param>
@@ -116,18 +116,18 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="minScale"></param>
         /// <param name="maxScale"></param>
         /// <returns></returns>
-        public static double ScaleSquareRoot(this ITag tag, double minRaw, double maxRaw, double minScale, double maxScale)
-        {
-            if (minRaw > maxRaw || minScale > maxScale) { throw new InvalidOperationException(); }
-            return (Math.Sqrt((((double)tag.Value) - minRaw) / (maxRaw - minRaw)) * (maxScale - minScale)) + minScale;
-        }
+        //public static double ScaleSquareRoot(this ITag tag, double minRaw, double maxRaw, double minScale, double maxScale)
+        //{
+        //    if (minRaw > maxRaw || minScale > maxScale) { throw new InvalidOperationException(); }
+        //    return (Math.Sqrt((((double)tag.Value) - minRaw) / (maxRaw - minRaw)) * (maxScale - minScale)) + minScale;
+        //}
 
         /// <summary>
         /// Number to bit array
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static BitArray NumberToBits(int value) { return new BitArray(new[] { value }); }
+        public static BitArray NumberToBits(int value) => new BitArray(new[] { value });
 
         /// <summary>
         /// Bite array to number

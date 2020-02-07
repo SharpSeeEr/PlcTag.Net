@@ -11,9 +11,11 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="message"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public TagOperationException(OperationResult result) : base("Error execute operation!")
+        public TagOperationException(string message, OperationResult result)
+            : base(message)
         {
             Result = result;
         }

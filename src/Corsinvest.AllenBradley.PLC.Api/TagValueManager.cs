@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Corsinvest.AllenBradley.PLC.Api
@@ -68,7 +66,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         {
             try
             {
-                return (T)_getFuncMap[_tag.ValueType](offset);
+                return (T)_getFuncMap[typeof(T)](offset);
             }
             catch (Exception)
             {
@@ -85,7 +83,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         {
             try
             {
-                _setFuncMap[_tag.ValueType](value, offset);
+                _setFuncMap[typeof(T)](value, offset);
             }
             catch (Exception)
             {
@@ -100,7 +98,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetUInt16(int offset)
         {
-             return NativeLibrary.plc_tag_get_uint16(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_uint16(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -110,7 +108,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetUInt16(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_uint16(_tag.Handle, offset, (UInt16)value);
+            NativeLibrary.plc_tag_set_uint16(_tag.Handle, offset, (UInt16)value);
         }
 
         /// <summary>
@@ -120,7 +118,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetInt16(int offset)
         {
-             return NativeLibrary.plc_tag_get_int16(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_int16(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -130,7 +128,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetInt16(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_int16(_tag.Handle, offset, (Int16)value);
+            NativeLibrary.plc_tag_set_int16(_tag.Handle, offset, (Int16)value);
         }
 
         /// <summary>
@@ -139,8 +137,8 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         /// <returns></returns>
         private object GetUInt8(int offset)
-        { 
-            return NativeLibrary.plc_tag_get_uint8(_tag.Handle, offset); 
+        {
+            return NativeLibrary.plc_tag_get_uint8(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -160,7 +158,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetInt8(int offset)
         {
-             return NativeLibrary.plc_tag_get_int8(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_int8(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -170,7 +168,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetInt8(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_int8(_tag.Handle, offset, (sbyte)value);
+            NativeLibrary.plc_tag_set_int8(_tag.Handle, offset, (sbyte)value);
         }
 
         /// <summary>
@@ -180,7 +178,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetUInt32(int offset)
         {
-             return NativeLibrary.plc_tag_get_uint32(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_uint32(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -190,7 +188,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetUInt32(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_uint32(_tag.Handle, offset, (UInt32)value);
+            NativeLibrary.plc_tag_set_uint32(_tag.Handle, offset, (UInt32)value);
         }
 
         /// <summary>
@@ -200,7 +198,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetInt32(int offset)
         {
-             return NativeLibrary.plc_tag_get_int32(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_int32(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -210,7 +208,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetInt32(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_int32(_tag.Handle, offset, (Int32)value);
+            NativeLibrary.plc_tag_set_int32(_tag.Handle, offset, (Int32)value);
         }
 
         /// <summary>
@@ -220,7 +218,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetUInt64(int offset)
         {
-             return NativeLibrary.plc_tag_get_uint64(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_uint64(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -230,7 +228,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetUInt64(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_uint64(_tag.Handle, offset, (UInt64)value);
+            NativeLibrary.plc_tag_set_uint64(_tag.Handle, offset, (UInt64)value);
         }
 
         /// <summary>
@@ -240,7 +238,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         public object GetInt64(int offset)
         {
-             return NativeLibrary.plc_tag_get_int64(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_int64(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -250,7 +248,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetInt64(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_int64(_tag.Handle, offset, (Int64)value);
+            NativeLibrary.plc_tag_set_int64(_tag.Handle, offset, (Int64)value);
         }
 
         /// <summary>
@@ -260,7 +258,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetFloat32(int offset)
         {
-             return NativeLibrary.plc_tag_get_float32(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_float32(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -270,7 +268,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetFloat32(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_float32(_tag.Handle, offset, (float)value);
+            NativeLibrary.plc_tag_set_float32(_tag.Handle, offset, (float)value);
         }
 
         /// <summary>
@@ -280,7 +278,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <returns></returns>
         private object GetFloat64(int offset)
         {
-             return NativeLibrary.plc_tag_get_float64(_tag.Handle, offset);
+            return NativeLibrary.plc_tag_get_float64(_tag.Handle, offset);
         }
 
         /// <summary>
@@ -290,7 +288,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="offset"></param>
         private void SetFloat64(object value, int offset)
         {
-             NativeLibrary.plc_tag_set_float64(_tag.Handle, offset, (double)value);
+            NativeLibrary.plc_tag_set_float64(_tag.Handle, offset, (double)value);
         }
 
         /// <summary>
@@ -338,7 +336,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
             }
 
             // pad with zeros
-            for (; strIdx < MAX_LENGTH_STRING; strIdx++) 
+            for (; strIdx < MAX_LENGTH_STRING; strIdx++)
             {
                 var charOffset = offset + BYTE_HEADER_LENGTH_STRING + strIdx;
                 NativeLibrary.plc_tag_set_uint8(_tag.Handle, charOffset, 0);
@@ -350,7 +348,8 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        private object GetBool(int offset) {
+        private object GetBool(int offset)
+        {
             return NativeLibrary.plc_tag_get_uint8(_tag.Handle, offset) > 0;
         }
 

@@ -56,7 +56,7 @@ namespace Corsinvest.AllenBradley.Test
                 var tagp12 = controller.CreateTag<Int64>("TKP_PC_B_P64");
                 var tagp2 = controller.CreateTag<Int32>("TKP_PC_B_P2");
                 tagp2.Read();
-                tagp2.Value = 1;
+                tagp2.Write(1);
 
                 var tag12 = controller.CreateTag<Int32>("TKP_PLC_D_P1[10]");
 
@@ -65,14 +65,14 @@ namespace Corsinvest.AllenBradley.Test
 
                 var tagOvenEnabled = controller.CreateTag<bool>("TKP_PLC_B_OVEN");
                 var oven = tagOvenEnabled.Read();
-                Console.Out.WriteLine(oven.Tag.Value);
+                Console.Out.WriteLine($"oven value: {oven}");
 
                 System.Threading.Thread.Sleep(800);
 
                 Console.Out.WriteLine("pippo");
 
                 oven = tagOvenEnabled.Read();
-                Console.Out.WriteLine(oven.Tag.Value);
+                Console.Out.WriteLine($"oven value: {oven}");
 
 
                 // var tagBPC1 = grp.CreateTagInt32("TKP_PC_B_P1");
@@ -83,16 +83,16 @@ namespace Corsinvest.AllenBradley.Test
                 // //var tag_1 = grp.CreateTagArray<string[]>("Track", 300);
 
                 //or
-                var tag = controller.CreateTag<string>("Track");
-                tag.Changed += TagChanged;
-                var aa = tag.Read();
+                //var tag = controller.CreateTag<string>("Track");
+                //tag.Changed += TagChanged;
+                //var aa = tag.Read();
 
-                Console.Out.WriteLine(aa);
+                //Console.Out.WriteLine(aa);
 
-                var tag1 = controller.CreateTag<Test12>("Test");
-                tag.Changed += TagChanged;
+                //var tag1 = controller.CreateTag<Test12>("Test");
+                //tag.Changed += TagChanged;
 
-                var tag2 = controller.CreateTag<float>("Fl32");
+                //var tag2 = controller.CreateTag<float>("Fl32");
 
 
                 //grp.Changed += GroupChanged;

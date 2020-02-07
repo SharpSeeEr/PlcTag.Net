@@ -11,14 +11,28 @@ namespace Corsinvest.AllenBradley.PLC.Api
     /// <typeparam name="T"></typeparam>
     public sealed class Tag<T> : ITag<T>, IDisposable
     {
-        private bool _disposed = false;
+        private bool _hasRead;
+        private bool _hasWritten;
+        private T _lastValueWritten;
+        private bool _isConnected;
+
+        private readonly TagValueManager<T> _valueManager;
+
+        /// <summary>
+        /// Event Handler called when the value read from the PLC changes.
+        /// </summary>
+        /// <param name="sender">The tag</param>
+        /// <param name="value">The new value</param>
+        public delegate void ValueChangeEventHandler(Tag<T> sender, T value);
 
         /// <summary>
         /// Event changed value
         /// </summary>
-        public event EventHandlerOperation Changed;
+        public event ValueChangeEventHandler Changed;
 
-        private Tag() { }
+        private Tag()
+        {
+        }
 
         /// <summary>
         /// Creates a tag. If the CPU type is LGX, the port type and slot has to be specified.
@@ -26,8 +40,6 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="controller">Controller reference</param>
         /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
         /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <param name="size">The size of an element in bytes. The tag is assumed to be composed of elements of the same size.
-        /// For structure tags, use the total size of the structure.</param>
         /// <param name="length">elements count: 1- single, n-array.</param>
         internal Tag(Controller controller, string name, int length)
         {
@@ -35,25 +47,14 @@ namespace Corsinvest.AllenBradley.PLC.Api
             Name = name;
             Size = TagSize.GetSize<T>();
             Length = length;
-            ValueManager = new TagValueManager<T>(this);
-            ValueType = typeof(T);
-
-            var url = $"protocol=ab_eip&gateway={controller.IPAddress}";
-            if (!string.IsNullOrEmpty(controller.Path)) { url += $"&path={controller.Path}"; }
-            url += $"&cpu={controller.CPUType}&elem_size={Size}&elem_count={Length}&name={Name}";
-            if (controller.DebugLevel > 0) { url += $"&debug={controller.DebugLevel}"; }
-
-            //create reference
-            Handle = NativeLibrary.plc_tag_create(url, controller.Timeout);
-
-            Value = TagHelper.CreateObject<T>(Length);
+            _valueManager = new TagValueManager<T>(this);
         }
 
         /// <summary>
         /// Handle, or Id, of the created Tag
         /// </summary>
         /// <value></value>
-        public Int32 Handle { get; }
+        public int Handle { get; private set; }
 
         /// <summary>
         /// Controller reference.
@@ -62,13 +63,13 @@ namespace Corsinvest.AllenBradley.PLC.Api
         public Controller Controller { get; }
 
         /// <summary>
-        /// The textual name of the tag to access. The name is anything allowed by the protocol. 
+        /// The textual name of the tag to access. The name is anything allowed by the protocol.
         /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.
         /// </summary>
         public string Name { get; }
 
         /// <summary>
-        /// The size of an element in bytes. The tag is assumed to be composed of elements of the same size.For structure tags, 
+        /// The size of an element in bytes. The tag is assumed to be composed of elements of the same size.For structure tags,
         /// use the total size of the structure.
         /// </summary>
         public int Size { get; }
@@ -87,74 +88,12 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Indicate if Tag is in read only. async Write raise exception.
         /// </summary>
         /// <value></value>
-        public bool ReadOnly { get; set; } = false;
+        public bool IsReadOnly { get; set; } = false;
 
         /// <summary>
-        /// Value manager
+        /// The last value read from the Tag
         /// </summary>
-        /// <value></value>
-        public TagValueManager<T> ValueManager { get; }
-
-        /// <summary>
-        /// Old value tag.
-        /// </summary>
-        /// <value></value>
-        private T _previousValueRead;
-
-        /// <summary>
-        /// Old value tag.
-        /// </summary>
-        /// <value></value>
-        private T _previousValueWritten;
-
-        private T _value;
-        /// <summary>
-        /// Value tag.
-        /// </summary>
-        /// <value></value>
-        public T Value
-        {
-            get
-            {
-                if (Controller.AutoReadValue) { Read(); }
-                return  ValueManager.Get();
-            }
-
-            set
-            {
-                _value = value;
-                ValueManager.Set(value, 0);
-                if (Controller.AutoWriteValue) { Write(); }
-            }
-        }
-
-        object ITag.Value
-        {
-            get => Value;
-        }
-
-        /// <summary>
-        /// Indicates whether or not a value has been read from the PLC.
-        /// </summary>
-        /// <value></value>
-        public bool HasBeenRead { get; private set; } = false;
-
-        /// <summary>
-        /// Indicates whether or not a value has been written to the PLC.
-        /// </summary>
-        public bool HasBeenWritten { get; private set; } = false;
-
-        /// <summary>
-        /// Indicate if Value changed OldValue 
-        /// </summary>
-        /// <value></value>
-        public bool HasChangedValue
-        {
-            get
-            {
-                return _value.Equals(_previousValueRead);
-            }
-        }
+        public T LastValueRead { get; private set; }
 
         /// <summary>
         /// Determines if this tag references an array of values
@@ -166,33 +105,71 @@ namespace Corsinvest.AllenBradley.PLC.Api
         }
 
         /// <summary>
+        /// Connects and creates the PLC tag
+        /// </summary>
+        public void Connect()
+        {
+            Handle = NativeLibrary.plc_tag_create(GetTagString(), Controller.Timeout);
+            _isConnected = true;
+        }
+
+        /// <summary>
+        /// Disconnects and destroys the PLC tag.
+        /// </summary>
+        public void Disconnect()
+        {
+            NativeLibrary.plc_tag_destroy(Handle);
+            _isConnected = false;
+            Handle = 0;
+        }
+
+        private string GetTagString()
+        {
+            var tagString = $"protocol=ab_eip&gateway={Controller.IPAddress}";
+
+            if (!string.IsNullOrEmpty(Controller.Path))
+            {
+                tagString += $"&path={Controller.Path}";
+            }
+            tagString += $"&cpu={Controller.CPUType}&elem_size={Size}&elem_count={Length}&name={Name}";
+
+            if (Controller.DebugLevel > 0)
+            {
+                tagString += $"&debug={Controller.DebugLevel}";
+            }
+            tagString += "&share_session=1";
+
+            return tagString;
+        }
+
+        /// <summary>
         /// Performs read of Tag
         /// </summary>
         /// <returns></returns>
-        public OperationResult Read()
+        public T Read()
         {
-            //save old value
-            _previousValueRead = _value;
-
             var timestamp = DateTime.Now;
             var watch = Stopwatch.StartNew();
             var statusCode = NativeLibrary.plc_tag_read(Handle, Controller.Timeout);
 
             watch.Stop();
-            HasBeenRead = true;
 
             var result = new OperationResult(this, timestamp, watch.ElapsedMilliseconds, statusCode);
 
             //check raise exception
-            if (Controller.FailOperationRaiseException && StatusCodeOperation.IsError(statusCode))
+            if (result.IsError())
             {
-                throw new TagOperationException(result);
+                throw new TagOperationException("Read Operation Error", result);
             }
 
-            //event change value
-            if (HasChangedValue) { Changed?.Invoke(result); }
+            var value = _valueManager.Get();
+            if (!_hasRead || !value.Equals(LastValueRead))
+            {
+                Changed?.Invoke(this, value);
+            }
+            LastValueRead = value;
 
-            return result;
+            return value;
         }
 
         private static int GetHashCode(byte[] data)
@@ -223,28 +200,24 @@ namespace Corsinvest.AllenBradley.PLC.Api
         }
 
         /// <summary>
-        /// Performs write of Tag 
+        /// Performs write of Tag
         /// </summary>
         /// <returns></returns>
-        public OperationResult Write()
+        public void Write(T value)
         {
-            if (ReadOnly) { throw new InvalidOperationException("Tag is set read only!"); }
+            if (IsReadOnly) { throw new InvalidOperationException("Tag is set read only!"); }
 
             var timestamp = DateTime.Now;
             var watch = Stopwatch.StartNew();
             var statusCode = NativeLibrary.plc_tag_write(Handle, Controller.Timeout);
             watch.Stop();
-            HasBeenWritten = true;
 
             var result = new OperationResult(this, timestamp, watch.ElapsedMilliseconds, statusCode);
 
-            //check raise exception
-            if (Controller.FailOperationRaiseException && result.IsError())
+            if (result.IsError())
             {
-                throw new TagOperationException(result);
+                throw new TagOperationException("Write Operation Error", result);
             }
-
-            return result;
         }
 
         /// <summary>
@@ -278,11 +251,20 @@ namespace Corsinvest.AllenBradley.PLC.Api
         public int Unlock() { return NativeLibrary.plc_tag_unlock(Handle); }
 
         #region IDisposable Support
-        void Dispose(bool disposing)
+
+        private bool _disposed = false;
+
+        private void Dispose(bool disposing)
         {
             if (!_disposed)
             {
-                if (disposing) { NativeLibrary.plc_tag_destroy(Handle); }
+                if (disposing)
+                {
+                    if (Handle > 0)
+                    {
+                        NativeLibrary.plc_tag_destroy(Handle);
+                    }
+                }
                 _disposed = true;
             }
         }
@@ -297,6 +279,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Dispose object
         /// </summary>
         public void Dispose() { Dispose(true); }
-        #endregion
+
+        #endregion IDisposable Support
     }
 }

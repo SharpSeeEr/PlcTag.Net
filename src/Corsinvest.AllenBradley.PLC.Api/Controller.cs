@@ -189,9 +189,8 @@ namespace Corsinvest.AllenBradley.PLC.Api
             _tagGroups[_defaultGroupName].Add(tag);
             return tag;
         }
-        #endregion
 
-
+        #endregion Create Tags
 
         #region IDisposable Support
 

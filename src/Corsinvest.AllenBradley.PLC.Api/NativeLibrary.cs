@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Corsinvest.AllenBradley.PLC.Api
 {
-    internal static class NativeLibrary
+    public static class NativeLibrary
     {
-        const string DLL_NAME = "plctag";
+        private const string DLL_NAME = "plctag.dll";
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_create", CallingConvention = CallingConvention.Cdecl)]
         public static extern Int32 plc_tag_create([MarshalAs(UnmanagedType.LPStr)] string lpString, int timeout);
@@ -19,7 +19,10 @@ namespace Corsinvest.AllenBradley.PLC.Api
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_decode_error", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr plc_tag_decode_error(int error);
 
-        public static string DecodeError(int code) { return Marshal.PtrToStringAnsi(NativeLibrary.plc_tag_decode_error(code)); }
+        public static string DecodeError(int code)
+        {
+            return Marshal.PtrToStringAnsi(NativeLibrary.plc_tag_decode_error(code));
+        }
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_lock", CallingConvention = CallingConvention.Cdecl)]
         public static extern int plc_tag_lock(int tagId);

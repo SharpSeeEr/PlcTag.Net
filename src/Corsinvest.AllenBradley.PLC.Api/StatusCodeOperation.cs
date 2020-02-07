@@ -74,7 +74,7 @@
         public const int ERR_CREATE = -11;
 
         /// <summary>
-        /// An error returned by a remote system when something is incorrectly duplicated 
+        /// An error returned by a remote system when something is incorrectly duplicated
         /// (i.e. a duplicate connection ID).
         /// </summary>
         public const int ERR_DUPLICATE = -12;
@@ -209,13 +209,6 @@
         /// An error occurred trying to write, usually to a socket.
         /// </summary>
         public const int ERR_WRITE = -37;
-
-        /// <summary>
-        /// Check code in error
-        /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        public static bool IsError(int code) { return (code != STATUS_PENDING && code != STATUS_OK); }
 
         /// <summary>
         /// Decode error.

@@ -57,6 +57,17 @@ namespace Corsinvest.AllenBradley.PLC.Api
         public OperationStatusCode StatusCode { get; }
 
         /// <summary>
+        /// Returns the text description for the StatusCode
+        /// </summary>
+        public string StatusCodeText
+        {
+            get
+            {
+                return NativeLibrary.DecodeError((int)StatusCode);
+            }
+        }
+
+        /// <summary>
         /// Reduce multiple result to one.
         /// </summary>
         /// <param name="results"></param>
@@ -76,7 +87,6 @@ namespace Corsinvest.AllenBradley.PLC.Api
         public override string ToString()
         {
             return $@"Tag Name:      {Tag.Name}
-Tag Value:     {Tag.Value}
 Timestamp:     {Timestamp}
 ExecutionTime: {ExecutionTime}
 StatusCode:    {StatusCode}";

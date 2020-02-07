@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 
 namespace Corsinvest.AllenBradley.PLC.Api
 {
@@ -11,29 +9,30 @@ namespace Corsinvest.AllenBradley.PLC.Api
     /// </summary>
     public class TagGroup
     {
-        private bool _disposed;
-        private readonly Timer _timer;
+        //private readonly Timer _timer;
+        //private object _lockScan = new object();
         private readonly Dictionary<string, ITag> _tags = new Dictionary<string, ITag>();
-        private object _lockScan = new object();
 
         /// <summary>
         /// Event changed value
         /// </summary>
-        public event EventHandlerOperations Changed;
+        //public event EventHandlerOperations Changed;
 
         /// <summary>
         /// Event on timed scan.
         /// </summary>
-        public event EventHandler OnTimedScan;
+        //public event EventHandler OnTimedScan;
 
-        private TagGroup() { }
+        private TagGroup()
+        {
+        }
 
         internal TagGroup(Controller controller, string name)
         {
             Controller = controller;
             Name = name;
-            _timer = new Timer();
-            _timer.Elapsed += OnTimedEvent;
+            //_timer = new Timer();
+            //_timer.Elapsed += OnTimedEvent;
         }
 
         /// <summary>
@@ -42,6 +41,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         public string Name { get; }
 
         #region Collection
+
         /// <summary>
         /// Tags
         /// </summary>
@@ -54,11 +54,10 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="tag"></param>
         public void Add(ITag tag)
         {
-            if (_tags.ContainsKey(tag.Name)) 
+            if (_tags.ContainsKey(tag.Name))
             {
-                throw new ArgumentException("Tag already exists in this group!"); 
+                throw new ArgumentException("Tag already exists in this group!");
             }
-
             _tags.Add(tag.Name, tag);
         }
 
@@ -68,9 +67,9 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <param name="tag"></param>
         public void Remove(ITag tag)
         {
-            if (!_tags.ContainsKey(tag.Name)) 
-            { 
-                throw new ArgumentException("Tag not found in this collection!"); 
+            if (!_tags.ContainsKey(tag.Name))
+            {
+                throw new ArgumentException("Tag not found in this collection!");
             }
             _tags.Remove(tag.Name);
         }
@@ -79,7 +78,8 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// Clears all Tags from the group
         /// </summary>
         public void Clear() { _tags.Clear(); }
-        #endregion
+
+        #endregion Collection
 
         /// <summary>
         /// Enabled status.
@@ -96,65 +96,65 @@ namespace Corsinvest.AllenBradley.PLC.Api
         /// <summary>
         /// Performs read of Group of Tags
         /// </summary>
-        public IEnumerable<OperationResult> Read(bool onlyChanged = false)
-        {
-            var results = Tags.Select(a => a.Read()).ToArray();
-            var resultsOnlyChanged = results.Where(a => a.Tag.HasChangedValue);
-            if (resultsOnlyChanged.Count() > 0) { Changed?.Invoke(resultsOnlyChanged); }
+        //public IEnumerable<OperationResult> Read(bool onlyChanged = false)
+        //{
+        //    var results = Tags.Select(a => a.Read()).ToArray();
+        //    var resultsOnlyChanged = results.Where(a => a.Tag.HasChangedValue);
+        //    if (resultsOnlyChanged.Count() > 0) { Changed?.Invoke(resultsOnlyChanged); }
 
-            return onlyChanged ? resultsOnlyChanged : results;
-        }
+        //    return onlyChanged ? resultsOnlyChanged : results;
+        //}
 
         /// <summary>
         /// Performs write of Group of Tags
         /// </summary>
-        public IEnumerable<OperationResult> Write() { return Tags.Select(a => a.Write()).ToArray(); }
+        //public IEnumerable<OperationResult> Write() { return Tags.Select(a => a.Write()).ToArray(); }
 
         /// <summary>
         /// Scan operation behavior of Tags
         /// </summary>
         /// <value></value>
-        public ScanMode ScanMode { get; set; } = ScanMode.Read;
+        //public ScanMode ScanMode { get; set; } = ScanMode.Read;
 
         /// <summary>
         /// Scanning update (refresh) interval in milliseconds
         /// </summary>
         /// <value></value>
-        public double ScanInterval
-        {
-            get => _timer.Interval;
-            set => _timer.Interval = value;
-        }
+        //public double ScanInterval
+        //{
+        //    get => _timer.Interval;
+        //    set => _timer.Interval = value;
+        //}
 
         /// <summary>
         /// Begins background scanning of Tags
         /// </summary>
-        public void ScanStart()
-        {
-            if (Enabled) { throw new Exception("TagGroup cannot scan when disabled"); }
-            _timer.Start();
-        }
+        //public void ScanStart()
+        //{
+        //    if (Enabled) { throw new Exception("TagGroup cannot scan when disabled"); }
+        //    _timer.Start();
+        //}
 
         /// <summary>
-        /// Stops scanning from previously called ScanStart.  
+        /// Stops scanning from previously called ScanStart.
         /// Terminates scan thread and frees any allocated resources.
         /// </summary>
-        public void ScanStop() { _timer.Stop(); }
+        //public void ScanStop() { _timer.Stop(); }
 
-        private void OnTimedEvent(Object source, ElapsedEventArgs e)
-        {
-            lock (_lockScan)
-            {
-                switch (ScanMode)
-                {
-                    case ScanMode.Read: Read(); break;
-                    case ScanMode.Write: Write(); break;
-                    case ScanMode.ReadAndWrite: break;
-                    default: break;
-                }
+        //private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        //{
+        //    lock (_lockScan)
+        //    {
+        //        switch (ScanMode)
+        //        {
+        //            case ScanMode.Read: Read(); break;
+        //            case ScanMode.Write: Write(); break;
+        //            case ScanMode.ReadAndWrite: break;
+        //            default: break;
+        //        }
 
-                OnTimedScan?.Invoke(this, EventArgs.Empty);
-            }
-        }
+        //        OnTimedScan?.Invoke(this, EventArgs.Empty);
+        //    }
+        //}
     }
 }

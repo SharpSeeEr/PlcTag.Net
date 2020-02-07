@@ -16,7 +16,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         SLC,
 
         /// <summary>
-        /// PLC-5 Controllers 
+        /// PLC-5 Controllers
         /// </summary>
         PLC5
     }

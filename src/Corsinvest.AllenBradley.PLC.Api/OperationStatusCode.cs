@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Corsinvest.AllenBradley.PLC.Api
+﻿namespace Corsinvest.AllenBradley.PLC.Api
 {
     /// <summary>
     /// Status Codes for all plctaglib operations
@@ -78,7 +74,7 @@ namespace Corsinvest.AllenBradley.PLC.Api
         ERR_CREATE = -11,
 
         /// <summary>
-        /// An error returned by a remote system when something is incorrectly duplicated 
+        /// An error returned by a remote system when something is incorrectly duplicated
         /// (i.e. a duplicate connection ID).
         /// </summary>
         ERR_DUPLICATE = -12,

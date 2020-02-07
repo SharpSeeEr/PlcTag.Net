@@ -10,57 +10,57 @@ namespace Corsinvest.AllenBradley.PLC.Api
     public static class TagSize
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int INT8 = 1;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int UINT8 = INT8;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int INT16 = 2;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int UINT16 = INT16;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int INT32 = 4;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int UINT32 = INT32;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int INT64 = 8;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int UINT64 = INT64;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int FLOAT32 = 4;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int FLOAT64 = 8;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public const int STRING = 88;
 
