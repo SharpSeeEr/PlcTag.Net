@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace PlcTag
 {
-    public static class NativeLibrary
+    internal static class NativeLibrary
     {
-        private const string DLL_NAME = "plctag.dll";
+        private const string DLL_NAME = "plctag";
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_create", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 plc_tag_create([MarshalAs(UnmanagedType.LPStr)] string lpString, int timeout);
+        public static extern Int32 plc_tag_create([MarshalAs(UnmanagedType.LPWStr)] string lpString, int timeout);
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_destroy", CallingConvention = CallingConvention.Cdecl)]
         public static extern int plc_tag_destroy(Int32 tag);

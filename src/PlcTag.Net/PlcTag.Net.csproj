@@ -1,25 +1,27 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>0.1.7</Version>
+    <Version>0.2.0</Version>
     <Company>Corsinvest Srl</Company>
     <Authors>Daniele Corsini,Aaron Throckmorton</Authors>
-    <Copyright>Corsinvest Srl</Copyright>
-    <Product>Comunication for Rockwell Allen-Bradley PLC</Product>
-    <AssemblyTitle>Communication for Rockwell Allen-Bradley PLC in .NET Core</AssemblyTitle>
-    <Description>Communication for Rockwell Allen-Bradley PLC in .NET Core</Description>
+    <Copyright>Corsinvest Srl,Aaron Throckmorton</Copyright>
+    <Product>Library for comunicating with Rockwell Allen-Bradley PLC using Ethernet/IP</Product>
+    <AssemblyTitle>Communication Library for Rockwell Allen-Bradley PLC in .NET Core</AssemblyTitle>
+    <Description>NetStandard 2.0 Library, wrapping the excellent libplctag C lib, for comunicating with Rockwell Allen-Bradley PLC using Ethernet/IP.</Description>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Corsinvest/cv4ab-api-dotnet</PackageProjectUrl>
-    <PackageTags>Rockwell;Allen-Bradley;Api,PLC;Corsinvest;libplctag</PackageTags>
+    <PackageProjectUrl>https://github.com/SharpSeeEr/PlcTag.Net</PackageProjectUrl>
+    <PackageTags>Rockwell;Allen-Bradley;Api,PLC;libplctag;plctag;ethernetip</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>New support 32/64 bit</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>PlcTag</RootNamespace>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
 
   <ItemGroup>
-  <None Include="C:\Users\Aaron\source\repos\cv4ab-api-dotnet\.gitignore" Link=".gitignore" />
   <None Include="icon.png">
     <Pack>True</Pack>
     <PackagePath></PackagePath>
@@ -27,15 +29,12 @@
 </ItemGroup>
 
   <ItemGroup>
-		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x64/native/plctag.dll" Link="plctag.dll" Pack="true" PackagePath="runtimes/win-x64/native/plctag.dll" />
-		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x86/native/plctag.dll" Link="plctag.dll" Pack="true" PackagePath="runtimes/win-x86/native/plctag.dll" />
-		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/linux-x64/native/plctag.so" Link="plctag.so" Pack="true" PackagePath="runtimes/linux-x64/native/plctag.so" />
-		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/linux-x86/native/plctag.so" Link="plctag.so" Pack="true" PackagePath="runtimes/linux-x86/native/plctag.so" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.1" />
+    <Content Include="runtimes\**" PackagePath="runtimes" Visible="false" />
   </ItemGroup>
 </Project>
 
