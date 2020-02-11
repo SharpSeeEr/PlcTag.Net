@@ -9,15 +9,12 @@ namespace PlcTag
     /// <summary>
     /// Controller
     /// </summary>
-    public class Controller : IDisposable
+    public sealed class Controller : IDisposable
     {
         private const string _defaultGroupName = "default";
 
         private readonly Dictionary<string, TagGroup> _tagGroups = new Dictionary<string, TagGroup>();
         private readonly Dictionary<string, ITag> _tags = new Dictionary<string, ITag>();
-        private readonly ILogger<Controller> _logger;
-
-        private bool _disposed;
 
         /// <summary>
         /// Controller definition
@@ -29,14 +26,12 @@ namespace PlcTag
         /// <para></para>Slot number where cpu is installed: 0,1.. </param>
         /// <param name="cpuType">AB CPU models</param>
         /// <param name="logger">ILogger</param>
-        public Controller(string ipAddress, string path, CPUType cpuType, ILogger<Controller> logger)
+        public Controller(string ipAddress, string path, CPUType cpuType)
         {
             if (cpuType == CPUType.LGX && string.IsNullOrEmpty(path))
             {
                 throw new ArgumentException("PortType and Slot must be specified for ControlLogix / CompactLogix processors");
             }
-
-            _logger = logger;
 
             IPAddress = ipAddress;
             Path = path;
@@ -44,24 +39,6 @@ namespace PlcTag
 
             _tagGroups.Add(_defaultGroupName, new TagGroup(this, _defaultGroupName));
         }
-
-        /// <summary>
-        /// Raise Exception on failed operation
-        /// </summary>
-        /// <value></value>
-        public bool FailOperationRaiseException { get; set; } = false;
-
-        /// <summary>
-        /// Automatic Write when using value.
-        /// </summary>
-        /// <value></value>
-        public bool AutoReadValue { get; set; } = false;
-
-        /// <summary>
-        /// Automatic Write when using value.
-        /// </summary>
-        /// <value></value>
-        public bool AutoWriteValue { get; set; } = false;
 
         /// <summary>
         /// Communication timeout millisec.
@@ -113,28 +90,24 @@ namespace PlcTag
         public string Path { get; }
 
         /// <summary>
-        /// Ping controller.
+        /// Connects all PLC tags
         /// </summary>
-        /// <param name="echo">True echo result to standard output</param>
-        /// <returns></returns>
-        public bool Ping(bool echo = false)
+        public void Connect()
         {
-            using (var ping = new Ping())
+            foreach (var tag in _tags.Values)
             {
-                var reply = ping.Send(IPAddress);
-                if (echo)
-                {
-                    if (reply.Status == IPStatus.Success)
-                    {
-                        _logger.LogInformation($"Ping Reply from {reply.Address}: time {reply.RoundtripTime} TTL={reply.Options?.Ttl} size={reply.Buffer?.Length}");
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"Pinging {reply.Address}: {reply.Status.ToString()}");
-                    }
-                }
+                tag.Connect();
+            }
+        }
 
-                return reply.Status == IPStatus.Success;
+        /// <summary>
+        /// Destroys all PLC tags
+        /// </summary>
+        public void Disconnect()
+        {
+            foreach (var tag in _tags.Values)
+            {
+                tag.Disconnect();
             }
         }
 
@@ -173,8 +146,6 @@ namespace PlcTag
         /// </summary>
         /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
         /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
-        /// <param name="size">The size of an element in bytes. The tag is assumed to be composed of elements of the same size.
-        /// For structure tags, use the total size of the structure.</param>
         /// <param name="length">elements count: 1- single, n-array.</param>
         /// <returns></returns>
         public Tag<T> CreateTag<T>(string name, int length)
@@ -192,8 +163,17 @@ namespace PlcTag
 
         #endregion Create Tags
 
+        /// <summary>
+        /// Decode libplctag error code
+        /// </summary>
+        /// <param name="code">Error code</param>
+        /// <returns></returns>
+        public static string DecodeError(int code) { return NativeLibrary.DecodeError(code); }
+
         #region IDisposable Support
 
+        private bool _disposed;
+        
         private void Dispose(bool disposing)
         {
             if (!_disposed)

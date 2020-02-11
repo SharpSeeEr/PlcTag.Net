@@ -9,19 +9,7 @@ namespace PlcTag
     /// </summary>
     public class TagGroup
     {
-        //private readonly Timer _timer;
-        //private object _lockScan = new object();
         private readonly Dictionary<string, ITag> _tags = new Dictionary<string, ITag>();
-
-        /// <summary>
-        /// Event changed value
-        /// </summary>
-        //public event EventHandlerOperations Changed;
-
-        /// <summary>
-        /// Event on timed scan.
-        /// </summary>
-        //public event EventHandler OnTimedScan;
 
         private TagGroup()
         {
@@ -31,8 +19,6 @@ namespace PlcTag
         {
             Controller = controller;
             Name = name;
-            //_timer = new Timer();
-            //_timer.Elapsed += OnTimedEvent;
         }
 
         /// <summary>
@@ -94,67 +80,25 @@ namespace PlcTag
         public Controller Controller { get; }
 
         /// <summary>
-        /// Performs read of Group of Tags
+        /// Connects all PLC tags
         /// </summary>
-        //public IEnumerable<OperationResult> Read(bool onlyChanged = false)
-        //{
-        //    var results = Tags.Select(a => a.Read()).ToArray();
-        //    var resultsOnlyChanged = results.Where(a => a.Tag.HasChangedValue);
-        //    if (resultsOnlyChanged.Count() > 0) { Changed?.Invoke(resultsOnlyChanged); }
-
-        //    return onlyChanged ? resultsOnlyChanged : results;
-        //}
+        public void Connect()
+        {
+            foreach (var tag in _tags.Values)
+            {
+                tag.Connect();
+            }
+        }
 
         /// <summary>
-        /// Performs write of Group of Tags
+        /// Destroys all PLC tags
         /// </summary>
-        //public IEnumerable<OperationResult> Write() { return Tags.Select(a => a.Write()).ToArray(); }
-
-        /// <summary>
-        /// Scan operation behavior of Tags
-        /// </summary>
-        /// <value></value>
-        //public ScanMode ScanMode { get; set; } = ScanMode.Read;
-
-        /// <summary>
-        /// Scanning update (refresh) interval in milliseconds
-        /// </summary>
-        /// <value></value>
-        //public double ScanInterval
-        //{
-        //    get => _timer.Interval;
-        //    set => _timer.Interval = value;
-        //}
-
-        /// <summary>
-        /// Begins background scanning of Tags
-        /// </summary>
-        //public void ScanStart()
-        //{
-        //    if (Enabled) { throw new Exception("TagGroup cannot scan when disabled"); }
-        //    _timer.Start();
-        //}
-
-        /// <summary>
-        /// Stops scanning from previously called ScanStart.
-        /// Terminates scan thread and frees any allocated resources.
-        /// </summary>
-        //public void ScanStop() { _timer.Stop(); }
-
-        //private void OnTimedEvent(Object source, ElapsedEventArgs e)
-        //{
-        //    lock (_lockScan)
-        //    {
-        //        switch (ScanMode)
-        //        {
-        //            case ScanMode.Read: Read(); break;
-        //            case ScanMode.Write: Write(); break;
-        //            case ScanMode.ReadAndWrite: break;
-        //            default: break;
-        //        }
-
-        //        OnTimedScan?.Invoke(this, EventArgs.Empty);
-        //    }
-        //}
+        public void Disconnect()
+        {
+            foreach (var tag in _tags.Values)
+            {
+                tag.Disconnect();
+            }
+        }
     }
 }

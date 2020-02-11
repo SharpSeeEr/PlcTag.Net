@@ -11,24 +11,7 @@ namespace PlcTag
     /// <typeparam name="T"></typeparam>
     public sealed class Tag<T> : ITag<T>, IDisposable
     {
-        private bool _hasRead;
-        private bool _hasWritten;
-        private T _lastValueWritten;
-        private bool _isConnected;
-
-        private readonly TagValueManager<T> _valueManager;
-
-        /// <summary>
-        /// Event Handler called when the value read from the PLC changes.
-        /// </summary>
-        /// <param name="sender">The tag</param>
-        /// <param name="value">The new value</param>
-        public delegate void ValueChangeEventHandler(Tag<T> sender, T value);
-
-        /// <summary>
-        /// Event changed value
-        /// </summary>
-        public event ValueChangeEventHandler Changed;
+        private readonly TagValueManager _valueManager;
 
         private Tag()
         {
@@ -45,9 +28,8 @@ namespace PlcTag
         {
             Controller = controller;
             Name = name;
-            Size = TagSize.GetSize<T>();
             Length = length;
-            _valueManager = new TagValueManager<T>(this);
+            _valueManager = TagValueManager.GetTagValueManager<T>();
         }
 
         /// <summary>
@@ -67,12 +49,6 @@ namespace PlcTag
         /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.
         /// </summary>
         public string Name { get; }
-
-        /// <summary>
-        /// The size of an element in bytes. The tag is assumed to be composed of elements of the same size.For structure tags,
-        /// use the total size of the structure.
-        /// </summary>
-        public int Size { get; }
 
         /// <summary>
         /// elements length: 1- single, n-array.
@@ -96,6 +72,12 @@ namespace PlcTag
         public T LastValueRead { get; private set; }
 
         /// <summary>
+        /// The size of an element in bytes. The tag is assumed to be composed of elements of the same size.For structure tags,
+        /// use the total size of the structure.
+        /// </summary>
+        public int Size { get => _valueManager.Size; }
+
+        /// <summary>
         /// Determines if this tag references an array of values
         /// </summary>
         /// <returns></returns>
@@ -110,7 +92,6 @@ namespace PlcTag
         public void Connect()
         {
             Handle = NativeLibrary.plc_tag_create(GetTagString(), Controller.Timeout);
-            _isConnected = true;
         }
 
         /// <summary>
@@ -119,7 +100,6 @@ namespace PlcTag
         public void Disconnect()
         {
             NativeLibrary.plc_tag_destroy(Handle);
-            _isConnected = false;
             Handle = 0;
         }
 
@@ -148,54 +128,22 @@ namespace PlcTag
         /// <returns></returns>
         public T Read()
         {
-            var timestamp = DateTime.Now;
-            var watch = Stopwatch.StartNew();
+            var result = new OperationResult(this, "Read");
             var statusCode = NativeLibrary.plc_tag_read(Handle, Controller.Timeout);
+            result.Finished(statusCode);
+            result.ThrowIfError();
 
-            watch.Stop();
-
-            var result = new OperationResult(this, timestamp, watch.ElapsedMilliseconds, statusCode);
-
-            //check raise exception
-            if (result.IsError())
+            result = new OperationResult(this, "ReadValue");
+            try
             {
-                throw new TagOperationException("Read Operation Error", result);
+                LastValueRead = (T)_valueManager.GetValue(Handle, 0);
+                result.Finished(OperationStatusCode.STATUS_OK);
+                return LastValueRead;
             }
-
-            var value = _valueManager.Get();
-            if (!_hasRead || !value.Equals(LastValueRead))
+            catch (Exception)
             {
-                Changed?.Invoke(this, value);
-            }
-            LastValueRead = value;
-
-            return value;
-        }
-
-        private static int GetHashCode(byte[] data)
-        {
-            if (data == null) { return 0; }
-
-            var i = data.Length;
-            var hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= data[i];
-            }
-
-            return hc;
-        }
-
-        private static T DeepClone<T>(T obj)
-        {
-            using (var stream = new MemoryStream())
-            {
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(stream, obj);
-                stream.Seek(0, SeekOrigin.Begin);
-                return (T)formatter.Deserialize(stream);
+                result.Finished(NativeLibrary.plc_tag_status(Handle));
+                throw new TagOperationException("ReadValue Operation Error", result);
             }
         }
 
@@ -207,24 +155,22 @@ namespace PlcTag
         {
             if (IsReadOnly) { throw new InvalidOperationException("Tag is set read only!"); }
 
-            var timestamp = DateTime.Now;
-            var watch = Stopwatch.StartNew();
-            var statusCode = NativeLibrary.plc_tag_write(Handle, Controller.Timeout);
-            watch.Stop();
-
-            var result = new OperationResult(this, timestamp, watch.ElapsedMilliseconds, statusCode);
-
-            if (result.IsError())
-            {
-                throw new TagOperationException("Write Operation Error", result);
-            }
+            var result = new OperationResult(this, "WriteValue");
+            var statusCode = _valueManager.SetValue(Handle, value, 0);
+            result.Finished(statusCode);
+            result.ThrowIfError();
+            
+            result = new OperationResult(this, "Write");
+            statusCode = NativeLibrary.plc_tag_write(Handle, Controller.Timeout);
+            result.Finished(statusCode);
+            result.ThrowIfError();
         }
 
         /// <summary>
         /// Abort any outstanding IO to the PLC. <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        public int Abort() { return NativeLibrary.plc_tag_abort(Handle); }
+        public OperationStatusCode Abort() { return (OperationStatusCode)NativeLibrary.plc_tag_abort(Handle); }
 
         /// <summary>
         /// Get size tag read from PLC.
@@ -236,19 +182,19 @@ namespace PlcTag
         /// Get status operation. <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        public int GetStatus() { return NativeLibrary.plc_tag_status(Handle); }
+        public OperationStatusCode GetStatus() { return (OperationStatusCode)NativeLibrary.plc_tag_status(Handle); }
 
         /// <summary>
         /// Lock for multitrading. <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        public int Lock() { return NativeLibrary.plc_tag_lock(Handle); }
+        public OperationStatusCode Lock() { return (OperationStatusCode)NativeLibrary.plc_tag_lock(Handle); }
 
         /// <summary>
         /// Unlock for multitrading <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        public int Unlock() { return NativeLibrary.plc_tag_unlock(Handle); }
+        public OperationStatusCode Unlock() { return (OperationStatusCode)NativeLibrary.plc_tag_unlock(Handle); }
 
         #region IDisposable Support
 
@@ -262,7 +208,7 @@ namespace PlcTag
                 {
                     if (Handle > 0)
                     {
-                        NativeLibrary.plc_tag_destroy(Handle);
+                        Disconnect();
                     }
                 }
                 _disposed = true;

@@ -31,6 +31,11 @@ namespace PlcTag
         void Connect();
 
         /// <summary>
+        /// Destroys the PLC tag
+        /// </summary>
+        void Disconnect();
+
+        /// <summary>
         /// Handle, or Id, of the created Tag
         /// </summary>
         /// <value></value>
@@ -75,7 +80,7 @@ namespace PlcTag
         /// Abort any outstanding IO to the PLC. <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        int Abort();
+        OperationStatusCode Abort();
 
         /// <summary>
         /// Get size tag.
@@ -87,18 +92,18 @@ namespace PlcTag
         /// Get status operation. <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        int GetStatus();
+        OperationStatusCode GetStatus();
 
         /// <summary>
         /// Lock for multitrading. <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        int Lock();
+        OperationStatusCode Lock();
 
         /// <summary>
         /// Unlock for multitrading <see cref="StatusCodeOperation"/>
         /// </summary>
         /// <returns></returns>
-        int Unlock();
+        OperationStatusCode Unlock();
     }
 }

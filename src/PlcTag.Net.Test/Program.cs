@@ -48,11 +48,10 @@ namespace PlcTag.Test
 
             logger.LogInformation("Example log message");
 
-            using (var controller = new Controller("10.155.128.192", "1, 0", CPUType.LGX, logger))
+            using (var controller = new Controller("10.155.128.192", "1, 0", CPUType.LGX))
             {
                 controller.Timeout = 1000;
                 // controller.DebugLevel=3;
-                Console.Out.WriteLine("Ping " + controller.Ping(true));
 
                 var tagp12 = controller.CreateTag<Int64>("TKP_PC_B_P64");
                 var tagp2 = controller.CreateTag<Int32>("TKP_PC_B_P2");
