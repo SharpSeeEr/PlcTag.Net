@@ -91,7 +91,12 @@ namespace PlcTag
         /// </summary>
         public void Connect()
         {
-            Handle = NativeLibrary.plc_tag_create(GetTagString(), Controller.Timeout);
+            var result = new OperationResult(this, "Create");
+            var statusCode = NativeLibrary.plc_tag_create(GetTagString(), Controller.Timeout);
+            result.Finished(statusCode);
+            result.ThrowIfError();
+
+            Handle = statusCode;
         }
 
         /// <summary>
