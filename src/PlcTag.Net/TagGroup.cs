@@ -15,7 +15,7 @@ namespace PlcTag
         {
         }
 
-        internal TagGroup(Controller controller, string name)
+        internal TagGroup(PlcController controller, string name)
         {
             Controller = controller;
             Name = name;
@@ -77,7 +77,7 @@ namespace PlcTag
         /// Controller
         /// </summary>
         /// <value></value>
-        public Controller Controller { get; }
+        public PlcController Controller { get; }
 
         /// <summary>
         /// Connects all PLC tags

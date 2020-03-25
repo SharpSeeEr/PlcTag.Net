@@ -24,7 +24,7 @@ namespace PlcTag
         /// <param name="name">The textual name of the tag to access. The name is anything allowed by the protocol.
         /// E.g. myDataStruct.rotationTimer.ACC, myDINTArray[42] etc.</param>
         /// <param name="length">elements count: 1- single, n-array.</param>
-        internal Tag(Controller controller, string name, int length)
+        internal Tag(PlcController controller, string name, int length)
         {
             Controller = controller;
             Name = name;
@@ -42,7 +42,7 @@ namespace PlcTag
         /// Controller reference.
         /// </summary>
         /// <value></value>
-        public Controller Controller { get; }
+        public PlcController Controller { get; }
 
         /// <summary>
         /// The textual name of the tag to access. The name is anything allowed by the protocol.
@@ -92,7 +92,8 @@ namespace PlcTag
         public void Connect()
         {
             var result = new OperationResult(this, "Create");
-            var statusCode = NativeLibrary.plc_tag_create(GetTagString(), Controller.Timeout);
+            var tagString = GetTagString();
+            var statusCode = NativeLibrary.plc_tag_create(tagString, Controller.Timeout);
             result.Finished(statusCode);
             result.ThrowIfError();
 
@@ -116,7 +117,7 @@ namespace PlcTag
             {
                 tagString += $"&path={Controller.Path}";
             }
-            tagString += $"&cpu={Controller.CPUType}&elem_size={Size}&elem_count={Length}&name={Name}";
+            tagString += $"&cpu={Controller.CPUType.ToString().ToLower()}&elem_size={Size}&elem_count={Length}&name={Name}";
 
             if (Controller.DebugLevel > 0)
             {
@@ -172,7 +173,7 @@ namespace PlcTag
         }
 
         /// <summary>
-        /// Abort any outstanding IO to the PLC. <see cref="StatusCodeOperation"/>
+        /// Abort any outstanding IO to the PLC. <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         public OperationStatusCode Abort() { return (OperationStatusCode)NativeLibrary.plc_tag_abort(Handle); }
@@ -184,19 +185,19 @@ namespace PlcTag
         public int GetSize() { return NativeLibrary.plc_tag_get_size(Handle); }
 
         /// <summary>
-        /// Get status operation. <see cref="StatusCodeOperation"/>
+        /// Get status operation. <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         public OperationStatusCode GetStatus() { return (OperationStatusCode)NativeLibrary.plc_tag_status(Handle); }
 
         /// <summary>
-        /// Lock for multitrading. <see cref="StatusCodeOperation"/>
+        /// Lock for multitrading. <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         public OperationStatusCode Lock() { return (OperationStatusCode)NativeLibrary.plc_tag_lock(Handle); }
 
         /// <summary>
-        /// Unlock for multitrading <see cref="StatusCodeOperation"/>
+        /// Unlock for multitrading <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         public OperationStatusCode Unlock() { return (OperationStatusCode)NativeLibrary.plc_tag_unlock(Handle); }

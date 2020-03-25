@@ -74,7 +74,7 @@ namespace PlcTag
         public long ExecutionTime { get => _watch.ElapsedMilliseconds; }
 
         /// <summary>
-        /// Returns the status code <see cref="StatusCodeOperation"/>
+        /// Returns the status code <see cref="OperationStatusCode"/>
         /// STATUS_OK will be returned if the operation completed successfully.
         /// </summary>
         /// <value></value>

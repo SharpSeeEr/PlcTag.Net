@@ -16,7 +16,7 @@ namespace PlcTag
         /// <param name="result"></param>
         /// <returns></returns>
         public TagOperationException(string message, OperationResult result)
-            : base(message)
+            : base($"{message} {result.Tag.Name} {result.StatusCodeText}")
         {
             Result = result;
         }

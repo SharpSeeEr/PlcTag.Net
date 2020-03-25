@@ -45,7 +45,7 @@ namespace PlcTag
         /// Controller reference.
         /// </summary>
         /// <value></value>
-        Controller Controller { get; }
+        PlcController Controller { get; }
 
         /// <summary>
         /// The textual name of the tag to access. The name is anything allowed by the protocol.
@@ -77,7 +77,7 @@ namespace PlcTag
         bool IsArray();
 
         /// <summary>
-        /// Abort any outstanding IO to the PLC. <see cref="StatusCodeOperation"/>
+        /// Abort any outstanding IO to the PLC. <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         OperationStatusCode Abort();
@@ -89,19 +89,19 @@ namespace PlcTag
         int GetSize();
 
         /// <summary>
-        /// Get status operation. <see cref="StatusCodeOperation"/>
+        /// Get status operation. <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         OperationStatusCode GetStatus();
 
         /// <summary>
-        /// Lock for multitrading. <see cref="StatusCodeOperation"/>
+        /// Lock for multitrading. <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         OperationStatusCode Lock();
 
         /// <summary>
-        /// Unlock for multitrading <see cref="StatusCodeOperation"/>
+        /// Unlock for multitrading <see cref="OperationStatusCode"/>
         /// </summary>
         /// <returns></returns>
         OperationStatusCode Unlock();

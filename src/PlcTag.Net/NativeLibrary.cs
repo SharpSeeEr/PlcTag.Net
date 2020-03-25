@@ -5,10 +5,10 @@ namespace PlcTag
 {
     internal static class NativeLibrary
     {
-        private const string DLL_NAME = "plctag";
+        const string DLL_NAME = "plctag";
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_create", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 plc_tag_create([MarshalAs(UnmanagedType.LPWStr)] string lpString, int timeout);
+        public static extern Int32 plc_tag_create([MarshalAs(UnmanagedType.LPStr)] string lpString, int timeout);
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_destroy", CallingConvention = CallingConvention.Cdecl)]
         public static extern int plc_tag_destroy(Int32 tag);
@@ -19,10 +19,7 @@ namespace PlcTag
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_decode_error", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr plc_tag_decode_error(int error);
 
-        public static string DecodeError(int code)
-        {
-            return Marshal.PtrToStringAnsi(NativeLibrary.plc_tag_decode_error(code));
-        }
+        public static string DecodeError(int code) { return Marshal.PtrToStringAnsi(NativeLibrary.plc_tag_decode_error(code)); }
 
         [DllImport(DLL_NAME, EntryPoint = "plc_tag_lock", CallingConvention = CallingConvention.Cdecl)]
         public static extern int plc_tag_lock(int tagId);

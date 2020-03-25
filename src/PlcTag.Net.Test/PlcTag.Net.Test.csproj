@@ -9,6 +9,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PlcTag.Net\PlcTag.Net.csproj" />
+    <ProjectReference Include="..\PlcTag.Net\PlcTag.Net.csproj">
+      <IncludeAssets>all</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
   </ItemGroup>
 </Project>

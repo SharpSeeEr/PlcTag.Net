@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>0.2.3</Version>
+    <Version>0.2.6</Version>
     <Company>Corsinvest Srl</Company>
     <Authors>Daniele Corsini,Aaron Throckmorton</Authors>
     <Copyright>Corsinvest Srl,Aaron Throckmorton</Copyright>
@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/SharpSeeEr/PlcTag.Net</PackageProjectUrl>
     <PackageTags>Rockwell;Allen-Bradley;Api,PLC;libplctag;plctag;ethernetip</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>Fix plctag.dll/so reference issue</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>PlcTag</RootNamespace>
   </PropertyGroup>

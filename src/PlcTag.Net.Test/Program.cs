@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace PlcTag.Test
 {
@@ -44,35 +45,53 @@ namespace PlcTag.Test
                     .AddFilter("LoggingConsoleApp.Program", LogLevel.Debug)
                     .AddConsole();
             });
-            ILogger<Controller> logger = loggerFactory.CreateLogger<Controller>();
+            ILogger<PlcController> logger = loggerFactory.CreateLogger<PlcController>();
 
             logger.LogInformation("Example log message");
 
-            using (var controller = new Controller("10.155.128.192", "1, 0", CPUType.LGX))
+            using (var controller = new PlcController("192.168.18.200", "1,0", CPUType.LGX))
             {
                 controller.Timeout = 1000;
-                // controller.DebugLevel=3;
+                //controller.DebugLevel = 3;
 
-                var tagp12 = controller.CreateTag<Int64>("TKP_PC_B_P64");
-                var tagp2 = controller.CreateTag<Int32>("TKP_PC_B_P2");
-                tagp2.Read();
-                tagp2.Write(1);
+                var heightTag = controller.CreateTag<int>("PrintBar_1_Height");
+                var ackTag = controller.CreateTag<bool>("PrintBar_1_HeightAck");
 
-                var tag12 = controller.CreateTag<Int32>("TKP_PLC_D_P1[10]");
+                controller.Connect();
 
-                var tagBPLC1 = controller.CreateTag<Int32>("TKP_PLC_B_P1");
-                tagBPLC1.Read();
+                var currentHeight = heightTag.Read();
+                Console.WriteLine("Height: ", currentHeight);
+                heightTag.Write(4);
 
-                var tagOvenEnabled = controller.CreateTag<bool>("TKP_PLC_B_OVEN");
-                var oven = tagOvenEnabled.Read();
-                Console.Out.WriteLine($"oven value: {oven}");
+                var acked = false;
+                while (!acked)
+                {
+                    Thread.Sleep(250);
+                    Console.WriteLine("Checking for Ack");
+                    acked = ackTag.Read();
+                }
+                Console.WriteLine("Acked");
+                ackTag.Write(false);
 
-                System.Threading.Thread.Sleep(800);
 
-                Console.Out.WriteLine("pippo");
+                currentHeight = heightTag.Read();
+                Console.WriteLine("Enabled: ", currentHeight);
 
-                oven = tagOvenEnabled.Read();
-                Console.Out.WriteLine($"oven value: {oven}");
+                //var tag12 = controller.CreateTag<Int32>("TKP_PLC_D_P1[10]");
+
+                //var tagBPLC1 = controller.CreateTag<Int32>("TKP_PLC_B_P1");
+                //tagBPLC1.Read();
+
+                //var tagOvenEnabled = controller.CreateTag<bool>("TKP_PLC_B_OVEN");
+                //var oven = tagOvenEnabled.Read();
+                //Console.Out.WriteLine($"oven value: {oven}");
+
+                //System.Threading.Thread.Sleep(800);
+
+                //Console.Out.WriteLine("pippo");
+
+                //oven = tagOvenEnabled.Read();
+                //Console.Out.WriteLine($"oven value: {oven}");
 
                 // var tagBPC1 = grp.CreateTagInt32("TKP_PC_B_P1"); var tagBarcode = grp.CreateTagString("TKP_PLC_S_P1");
 
